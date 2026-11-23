@@ -1,0 +1,86 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:jiatan:activity-model-recognition:1.0:worker-input",
+  "type": "object",
+  "properties": {
+    "contractVersion": {
+      "const": "activity-model-recognition/1.0"
+    },
+    "consent": {
+      "const": true
+    },
+    "excerpts": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "excerptId": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9_-]{1,64}$"
+          },
+          "materialId": {
+            "type": "string",
+            "minLength": 1
+          },
+          "locator": {
+            "type": "object",
+            "required": [
+              "kind"
+            ],
+            "properties": {
+              "kind": {
+                "enum": [
+                  "csv",
+                  "docx",
+                  "text",
+                  "xlsx"
+                ]
+              }
+            }
+          },
+          "text": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 800
+          }
+        },
+        "required": [
+          "excerptId",
+          "materialId",
+          "locator",
+          "text"
+        ],
+        "additionalProperties": false
+      },
+      "maxItems": 48,
+      "minItems": 1
+    },
+    "candidateAnchors": {
+      "type": [
+        "object",
+        "null"
+      ],
+      "maxProperties": 20,
+      "propertyNames": {
+        "type": "string",
+        "pattern": "^candidate-(?:[1-9]|1[0-9]|20)$"
+      },
+      "additionalProperties": {
+        "type": "array",
+        "items": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9_-]{1,64}$"
+        },
+        "maxItems": 48,
+        "minItems": 1,
+        "uniqueItems": true
+      }
+    }
+  },
+  "required": [
+    "contractVersion",
+    "consent",
+    "excerpts"
+  ],
+  "additionalProperties": false
+}

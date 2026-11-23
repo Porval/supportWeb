@@ -1,0 +1,23 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>活动 Agent 对话 · 价探</title>
+  <link rel="stylesheet" href="/chat.css">
+  <script type="module" src="/chat.js"></script>
+</head>
+<body>
+  <header><a href="/" aria-label="返回价探工作台">← 返回工作台</a><strong>价探</strong></header>
+  <main>
+    <div class="title"><h1>活动 Agent 对话</h1></div>
+    <p id="status" class="status" role="status">正在读取对话…</p>
+    <div id="messages" role="log" aria-label="对话记录" aria-live="polite" aria-relevant="additions"></div>
+    <form id="composer">
+      <label for="message">给活动 Agent 发消息</label>
+      <textarea id="message" maxlength="3000" rows="3" placeholder="输入消息…" required></textarea>
+      <div class="actions"><small>需要模型回答时，活动 Agent 会将当前消息和最近对话发送给 DeepSeek。</small><button id="send" disabled>发送</button></div>
+    </form>
+  </main>
+</body>
+</html>

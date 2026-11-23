@@ -1,0 +1,6 @@
+# 台账逐行分类 /1.0.0
+本批是有明确字段位置的活动台账，系统将从原表按平台和报名ID重建活动。
+本次只确认行覆盖与用途。返回 {"groups":[],"rows":[...]}。groups 必须为空。
+输入 rows 的每个 id 原样返回一次。每项严格为 {"id":"原行id","kind":"activity或context或ignore","group":null,"fields":{}}。
+有品牌、券档或活动编号的行用 activity；表头用 context；空白说明用 ignore。
+不要返回报名动作、分组、商品字段或拼接过的优惠规则。不要把上下文 header 当成新增行。

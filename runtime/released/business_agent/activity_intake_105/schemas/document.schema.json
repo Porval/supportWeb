@@ -1,0 +1,411 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:jiatan:activity-intake:1.0:document",
+  "type": "object",
+  "properties": {
+    "materialId": {
+      "type": "string"
+    },
+    "sha256": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$"
+    },
+    "status": {
+      "enum": [
+        "parsed",
+        "unsupported",
+        "invalid",
+        "partial"
+      ]
+    },
+    "kind": {
+      "type": "string"
+    },
+    "textBlocks": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "text": {
+            "type": "string"
+          },
+          "locator": {
+            "type": "object",
+            "properties": {
+              "kind": {
+                "enum": [
+                  "text",
+                  "csv",
+                  "xlsx",
+                  "docx",
+                  "form"
+                ]
+              },
+              "line": {
+                "type": "integer"
+              },
+              "start": {
+                "type": "integer"
+              },
+              "end": {
+                "type": "integer"
+              },
+              "lineStart": {
+                "type": "integer"
+              },
+              "lineEnd": {
+                "type": "integer"
+              },
+              "row": {
+                "type": "integer"
+              },
+              "column": {
+                "type": "integer"
+              },
+              "sheet": {
+                "type": "string"
+              },
+              "cell": {
+                "type": "string"
+              },
+              "paragraph": {
+                "type": "integer"
+              },
+              "table": {
+                "type": "integer"
+              },
+              "fieldPath": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "kind"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "required": [
+          "text",
+          "locator"
+        ],
+        "additionalProperties": false
+      },
+      "maxItems": 200000
+    },
+    "tableRows": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "locator": {
+            "type": "object",
+            "properties": {
+              "kind": {
+                "enum": [
+                  "text",
+                  "csv",
+                  "xlsx",
+                  "docx",
+                  "form"
+                ]
+              },
+              "line": {
+                "type": "integer"
+              },
+              "start": {
+                "type": "integer"
+              },
+              "end": {
+                "type": "integer"
+              },
+              "lineStart": {
+                "type": "integer"
+              },
+              "lineEnd": {
+                "type": "integer"
+              },
+              "row": {
+                "type": "integer"
+              },
+              "column": {
+                "type": "integer"
+              },
+              "sheet": {
+                "type": "string"
+              },
+              "cell": {
+                "type": "string"
+              },
+              "paragraph": {
+                "type": "integer"
+              },
+              "table": {
+                "type": "integer"
+              },
+              "fieldPath": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "kind"
+            ],
+            "additionalProperties": false
+          },
+          "cells": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "column": {
+                  "type": "string"
+                },
+                "text": {
+                  "type": "string"
+                },
+                "sourceType": {
+                  "enum": [
+                    "string",
+                    "number",
+                    "formula",
+                    "blank"
+                  ]
+                },
+                "locator": {
+                  "type": "object",
+                  "properties": {
+                    "kind": {
+                      "enum": [
+                        "text",
+                        "csv",
+                        "xlsx",
+                        "docx",
+                        "form"
+                      ]
+                    },
+                    "line": {
+                      "type": "integer"
+                    },
+                    "start": {
+                      "type": "integer"
+                    },
+                    "end": {
+                      "type": "integer"
+                    },
+                    "lineStart": {
+                      "type": "integer"
+                    },
+                    "lineEnd": {
+                      "type": "integer"
+                    },
+                    "row": {
+                      "type": "integer"
+                    },
+                    "column": {
+                      "type": "integer"
+                    },
+                    "sheet": {
+                      "type": "string"
+                    },
+                    "cell": {
+                      "type": "string"
+                    },
+                    "paragraph": {
+                      "type": "integer"
+                    },
+                    "table": {
+                      "type": "integer"
+                    },
+                    "fieldPath": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "kind"
+                  ],
+                  "additionalProperties": false
+                }
+              },
+              "required": [
+                "column",
+                "text",
+                "sourceType",
+                "locator"
+              ],
+              "additionalProperties": false
+            },
+            "maxItems": 1000
+          }
+        },
+        "required": [
+          "locator",
+          "cells"
+        ],
+        "additionalProperties": false
+      },
+      "maxItems": 1001
+    },
+    "errors": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string"
+          },
+          "message": {
+            "type": "string"
+          },
+          "locator": {
+            "type": "object",
+            "properties": {
+              "kind": {
+                "enum": [
+                  "text",
+                  "csv",
+                  "xlsx",
+                  "docx",
+                  "form"
+                ]
+              },
+              "line": {
+                "type": "integer"
+              },
+              "start": {
+                "type": "integer"
+              },
+              "end": {
+                "type": "integer"
+              },
+              "lineStart": {
+                "type": "integer"
+              },
+              "lineEnd": {
+                "type": "integer"
+              },
+              "row": {
+                "type": "integer"
+              },
+              "column": {
+                "type": "integer"
+              },
+              "sheet": {
+                "type": "string"
+              },
+              "cell": {
+                "type": "string"
+              },
+              "paragraph": {
+                "type": "integer"
+              },
+              "table": {
+                "type": "integer"
+              },
+              "fieldPath": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "kind"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "required": [
+          "code",
+          "message"
+        ],
+        "additionalProperties": false
+      },
+      "maxItems": 1000
+    },
+    "warnings": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string"
+          },
+          "message": {
+            "type": "string"
+          },
+          "locator": {
+            "type": "object",
+            "properties": {
+              "kind": {
+                "enum": [
+                  "text",
+                  "csv",
+                  "xlsx",
+                  "docx",
+                  "form"
+                ]
+              },
+              "line": {
+                "type": "integer"
+              },
+              "start": {
+                "type": "integer"
+              },
+              "end": {
+                "type": "integer"
+              },
+              "lineStart": {
+                "type": "integer"
+              },
+              "lineEnd": {
+                "type": "integer"
+              },
+              "row": {
+                "type": "integer"
+              },
+              "column": {
+                "type": "integer"
+              },
+              "sheet": {
+                "type": "string"
+              },
+              "cell": {
+                "type": "string"
+              },
+              "paragraph": {
+                "type": "integer"
+              },
+              "table": {
+                "type": "integer"
+              },
+              "fieldPath": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "kind"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "required": [
+          "code",
+          "message"
+        ],
+        "additionalProperties": false
+      },
+      "maxItems": 1000
+    },
+    "parserVersion": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "materialId",
+    "sha256",
+    "status",
+    "kind",
+    "textBlocks",
+    "tableRows",
+    "errors",
+    "warnings",
+    "parserVersion"
+  ],
+  "additionalProperties": false
+}

@@ -1,0 +1,898 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:jiatan:activity-intake:1.0:request",
+  "oneOf": [
+    {
+      "type": "object",
+      "properties": {
+        "contractVersion": {
+          "const": "activity-intake/1.0"
+        },
+        "requestId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 200
+        },
+        "operation": {
+          "const": "decode"
+        },
+        "payload": {
+          "type": "object",
+          "properties": {
+            "materialId": {
+              "type": "string"
+            },
+            "filename": {
+              "type": "string"
+            },
+            "mediaType": {
+              "type": "string"
+            },
+            "sha256": {
+              "type": "string",
+              "pattern": "^[a-f0-9]{64}$"
+            },
+            "contentBase64": {
+              "type": "string"
+            },
+            "limits": {
+              "anyOf": [
+                {
+                  "type": "null"
+                },
+                {
+                  "type": "object",
+                  "properties": {
+                    "maxBytes": {
+                      "type": "integer",
+                      "minimum": 1,
+                      "maximum": 5242880
+                    },
+                    "maxTextChars": {
+                      "type": "integer",
+                      "minimum": 1,
+                      "maximum": 200000
+                    },
+                    "maxRows": {
+                      "type": "integer",
+                      "minimum": 1,
+                      "maximum": 1000
+                    },
+                    "maxCandidates": {
+                      "type": "integer",
+                      "minimum": 1,
+                      "maximum": 20
+                    },
+                    "maxZipEntries": {
+                      "type": "integer",
+                      "minimum": 1,
+                      "maximum": 200
+                    },
+                    "maxExpandedBytes": {
+                      "type": "integer",
+                      "minimum": 1,
+                      "maximum": 20971520
+                    },
+                    "maxEntryBytes": {
+                      "type": "integer",
+                      "minimum": 1,
+                      "maximum": 5242880
+                    },
+                    "maxEvidence": {
+                      "type": "integer",
+                      "minimum": 1,
+                      "maximum": 1500
+                    }
+                  },
+                  "required": [],
+                  "additionalProperties": false
+                }
+              ]
+            }
+          },
+          "required": [
+            "materialId",
+            "filename",
+            "mediaType",
+            "sha256",
+            "contentBase64"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "contractVersion",
+        "requestId",
+        "operation",
+        "payload"
+      ],
+      "additionalProperties": false
+    },
+    {
+      "type": "object",
+      "properties": {
+        "contractVersion": {
+          "const": "activity-intake/1.0"
+        },
+        "requestId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 200
+        },
+        "operation": {
+          "const": "analyze"
+        },
+        "payload": {
+          "type": "object",
+          "properties": {
+            "contractVersion": {
+              "const": "activity-intake/1.0"
+            },
+            "inputRevision": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "inputDigest": {
+              "type": "string",
+              "pattern": "^[a-f0-9]{64}$"
+            },
+            "manualFields": {
+              "oneOf": [
+                {
+                  "type": "object",
+                  "properties": {},
+                  "required": [],
+                  "additionalProperties": false
+                },
+                {
+                  "type": "object",
+                  "properties": {
+                    "materialId": {
+                      "type": "string",
+                      "pattern": "^FORM-.+-r[1-9][0-9]*$"
+                    },
+                    "sha256": {
+                      "type": "string",
+                      "pattern": "^[a-f0-9]{64}$"
+                    },
+                    "fields": {
+                      "type": "object",
+                      "properties": {
+                        "activityName": {
+                          "type": [
+                            "string",
+                            "null"
+                          ],
+                          "maxLength": 200
+                        },
+                        "type": {
+                          "enum": [
+                            null,
+                            "brand",
+                            "platform",
+                            "jiatan_sourcing"
+                          ]
+                        },
+                        "platformCode": {
+                          "enum": [
+                            null,
+                            "meituan",
+                            "taobao_instant",
+                            "jiatan"
+                          ]
+                        },
+                        "sourceActivityId": {
+                          "type": [
+                            "string",
+                            "null"
+                          ],
+                          "maxLength": 200
+                        },
+                        "startAt": {
+                          "type": [
+                            "string",
+                            "null"
+                          ]
+                        },
+                        "endAt": {
+                          "type": [
+                            "string",
+                            "null"
+                          ]
+                        },
+                        "brandIds": {
+                          "anyOf": [
+                            {
+                              "type": "null"
+                            },
+                            {
+                              "type": "array",
+                              "items": {
+                                "type": "string",
+                                "minLength": 1
+                              },
+                              "maxItems": 20,
+                              "uniqueItems": true
+                            }
+                          ]
+                        },
+                        "rulesText": {
+                          "type": [
+                            "string",
+                            "null"
+                          ],
+                          "maxLength": 10000
+                        },
+                        "brandBenefit": {
+                          "type": [
+                            "string",
+                            "null"
+                          ],
+                          "maxLength": 5000
+                        },
+                        "remark": {
+                          "type": [
+                            "string",
+                            "null"
+                          ],
+                          "maxLength": 5000
+                        },
+                        "manualProductRows": {
+                          "anyOf": [
+                            {
+                              "type": "null"
+                            },
+                            {
+                              "type": "array",
+                              "items": {
+                                "type": "object",
+                                "properties": {
+                                  "rowId": {
+                                    "type": "string",
+                                    "pattern": "^manual-[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}$"
+                                  },
+                                  "productId": {
+                                    "type": [
+                                      "string",
+                                      "null"
+                                    ]
+                                  },
+                                  "rawInternalCode": {
+                                    "type": [
+                                      "string",
+                                      "null"
+                                    ]
+                                  },
+                                  "rawUpc": {
+                                    "type": [
+                                      "string",
+                                      "null"
+                                    ]
+                                  },
+                                  "rawName": {
+                                    "type": [
+                                      "string",
+                                      "null"
+                                    ]
+                                  }
+                                },
+                                "required": [
+                                  "rowId"
+                                ],
+                                "additionalProperties": false
+                              },
+                              "maxItems": 1000
+                            }
+                          ]
+                        },
+                        "companyBearing": {
+                          "anyOf": [
+                            {
+                              "type": "null"
+                            },
+                            {
+                              "type": "object",
+                              "properties": {
+                                "state": {
+                                  "enum": [
+                                    "yes",
+                                    "no",
+                                    "unknown"
+                                  ]
+                                }
+                              },
+                              "required": [
+                                "state"
+                              ],
+                              "additionalProperties": false
+                            }
+                          ]
+                        }
+                      },
+                      "required": [],
+                      "additionalProperties": false
+                    }
+                  },
+                  "required": [
+                    "materialId",
+                    "sha256",
+                    "fields"
+                  ],
+                  "additionalProperties": false
+                }
+              ]
+            },
+            "documents": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "materialId": {
+                    "type": "string"
+                  },
+                  "sha256": {
+                    "type": "string",
+                    "pattern": "^[a-f0-9]{64}$"
+                  },
+                  "status": {
+                    "enum": [
+                      "parsed",
+                      "unsupported",
+                      "invalid",
+                      "partial"
+                    ]
+                  },
+                  "kind": {
+                    "type": "string"
+                  },
+                  "textBlocks": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "text": {
+                          "type": "string"
+                        },
+                        "locator": {
+                          "type": "object",
+                          "properties": {
+                            "kind": {
+                              "enum": [
+                                "text",
+                                "csv",
+                                "xlsx",
+                                "docx",
+                                "form"
+                              ]
+                            },
+                            "line": {
+                              "type": "integer"
+                            },
+                            "start": {
+                              "type": "integer"
+                            },
+                            "end": {
+                              "type": "integer"
+                            },
+                            "lineStart": {
+                              "type": "integer"
+                            },
+                            "lineEnd": {
+                              "type": "integer"
+                            },
+                            "row": {
+                              "type": "integer"
+                            },
+                            "column": {
+                              "type": "integer"
+                            },
+                            "sheet": {
+                              "type": "string"
+                            },
+                            "cell": {
+                              "type": "string"
+                            },
+                            "paragraph": {
+                              "type": "integer"
+                            },
+                            "table": {
+                              "type": "integer"
+                            },
+                            "fieldPath": {
+                              "type": "string"
+                            }
+                          },
+                          "required": [
+                            "kind"
+                          ],
+                          "additionalProperties": false
+                        }
+                      },
+                      "required": [
+                        "text",
+                        "locator"
+                      ],
+                      "additionalProperties": false
+                    },
+                    "maxItems": 200000
+                  },
+                  "tableRows": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "locator": {
+                          "type": "object",
+                          "properties": {
+                            "kind": {
+                              "enum": [
+                                "text",
+                                "csv",
+                                "xlsx",
+                                "docx",
+                                "form"
+                              ]
+                            },
+                            "line": {
+                              "type": "integer"
+                            },
+                            "start": {
+                              "type": "integer"
+                            },
+                            "end": {
+                              "type": "integer"
+                            },
+                            "lineStart": {
+                              "type": "integer"
+                            },
+                            "lineEnd": {
+                              "type": "integer"
+                            },
+                            "row": {
+                              "type": "integer"
+                            },
+                            "column": {
+                              "type": "integer"
+                            },
+                            "sheet": {
+                              "type": "string"
+                            },
+                            "cell": {
+                              "type": "string"
+                            },
+                            "paragraph": {
+                              "type": "integer"
+                            },
+                            "table": {
+                              "type": "integer"
+                            },
+                            "fieldPath": {
+                              "type": "string"
+                            }
+                          },
+                          "required": [
+                            "kind"
+                          ],
+                          "additionalProperties": false
+                        },
+                        "cells": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "column": {
+                                "type": "string"
+                              },
+                              "text": {
+                                "type": "string"
+                              },
+                              "sourceType": {
+                                "enum": [
+                                  "string",
+                                  "number",
+                                  "formula",
+                                  "blank"
+                                ]
+                              },
+                              "locator": {
+                                "type": "object",
+                                "properties": {
+                                  "kind": {
+                                    "enum": [
+                                      "text",
+                                      "csv",
+                                      "xlsx",
+                                      "docx",
+                                      "form"
+                                    ]
+                                  },
+                                  "line": {
+                                    "type": "integer"
+                                  },
+                                  "start": {
+                                    "type": "integer"
+                                  },
+                                  "end": {
+                                    "type": "integer"
+                                  },
+                                  "lineStart": {
+                                    "type": "integer"
+                                  },
+                                  "lineEnd": {
+                                    "type": "integer"
+                                  },
+                                  "row": {
+                                    "type": "integer"
+                                  },
+                                  "column": {
+                                    "type": "integer"
+                                  },
+                                  "sheet": {
+                                    "type": "string"
+                                  },
+                                  "cell": {
+                                    "type": "string"
+                                  },
+                                  "paragraph": {
+                                    "type": "integer"
+                                  },
+                                  "table": {
+                                    "type": "integer"
+                                  },
+                                  "fieldPath": {
+                                    "type": "string"
+                                  }
+                                },
+                                "required": [
+                                  "kind"
+                                ],
+                                "additionalProperties": false
+                              }
+                            },
+                            "required": [
+                              "column",
+                              "text",
+                              "sourceType",
+                              "locator"
+                            ],
+                            "additionalProperties": false
+                          },
+                          "maxItems": 1000
+                        }
+                      },
+                      "required": [
+                        "locator",
+                        "cells"
+                      ],
+                      "additionalProperties": false
+                    },
+                    "maxItems": 1001
+                  },
+                  "errors": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string"
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "locator": {
+                          "type": "object",
+                          "properties": {
+                            "kind": {
+                              "enum": [
+                                "text",
+                                "csv",
+                                "xlsx",
+                                "docx",
+                                "form"
+                              ]
+                            },
+                            "line": {
+                              "type": "integer"
+                            },
+                            "start": {
+                              "type": "integer"
+                            },
+                            "end": {
+                              "type": "integer"
+                            },
+                            "lineStart": {
+                              "type": "integer"
+                            },
+                            "lineEnd": {
+                              "type": "integer"
+                            },
+                            "row": {
+                              "type": "integer"
+                            },
+                            "column": {
+                              "type": "integer"
+                            },
+                            "sheet": {
+                              "type": "string"
+                            },
+                            "cell": {
+                              "type": "string"
+                            },
+                            "paragraph": {
+                              "type": "integer"
+                            },
+                            "table": {
+                              "type": "integer"
+                            },
+                            "fieldPath": {
+                              "type": "string"
+                            }
+                          },
+                          "required": [
+                            "kind"
+                          ],
+                          "additionalProperties": false
+                        }
+                      },
+                      "required": [
+                        "code",
+                        "message"
+                      ],
+                      "additionalProperties": false
+                    },
+                    "maxItems": 1000
+                  },
+                  "warnings": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string"
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "locator": {
+                          "type": "object",
+                          "properties": {
+                            "kind": {
+                              "enum": [
+                                "text",
+                                "csv",
+                                "xlsx",
+                                "docx",
+                                "form"
+                              ]
+                            },
+                            "line": {
+                              "type": "integer"
+                            },
+                            "start": {
+                              "type": "integer"
+                            },
+                            "end": {
+                              "type": "integer"
+                            },
+                            "lineStart": {
+                              "type": "integer"
+                            },
+                            "lineEnd": {
+                              "type": "integer"
+                            },
+                            "row": {
+                              "type": "integer"
+                            },
+                            "column": {
+                              "type": "integer"
+                            },
+                            "sheet": {
+                              "type": "string"
+                            },
+                            "cell": {
+                              "type": "string"
+                            },
+                            "paragraph": {
+                              "type": "integer"
+                            },
+                            "table": {
+                              "type": "integer"
+                            },
+                            "fieldPath": {
+                              "type": "string"
+                            }
+                          },
+                          "required": [
+                            "kind"
+                          ],
+                          "additionalProperties": false
+                        }
+                      },
+                      "required": [
+                        "code",
+                        "message"
+                      ],
+                      "additionalProperties": false
+                    },
+                    "maxItems": 1000
+                  },
+                  "parserVersion": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "materialId",
+                  "sha256",
+                  "status",
+                  "kind",
+                  "textBlocks",
+                  "tableRows",
+                  "errors",
+                  "warnings",
+                  "parserVersion"
+                ],
+                "additionalProperties": false
+              },
+              "maxItems": 20
+            },
+            "catalogSnapshot": {
+              "type": "object",
+              "properties": {
+                "revision": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "brands": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "id": {
+                        "type": "string",
+                        "minLength": 1
+                      },
+                      "name": {
+                        "type": "string",
+                        "minLength": 1
+                      }
+                    },
+                    "required": [
+                      "id",
+                      "name"
+                    ],
+                    "additionalProperties": false
+                  },
+                  "maxItems": 10000
+                },
+                "products": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "id": {
+                        "type": "string",
+                        "minLength": 1
+                      },
+                      "internalCode": {
+                        "type": "string",
+                        "minLength": 1
+                      },
+                      "upc": {
+                        "type": [
+                          "string",
+                          "null"
+                        ]
+                      },
+                      "name": {
+                        "type": "string",
+                        "minLength": 1
+                      },
+                      "spec": {
+                        "type": [
+                          "string",
+                          "null"
+                        ]
+                      },
+                      "brandId": {
+                        "type": [
+                          "string",
+                          "null"
+                        ]
+                      }
+                    },
+                    "required": [
+                      "id",
+                      "internalCode",
+                      "upc",
+                      "name",
+                      "spec",
+                      "brandId"
+                    ],
+                    "additionalProperties": false
+                  },
+                  "maxItems": 10000
+                }
+              },
+              "required": [
+                "revision",
+                "brands",
+                "products"
+              ],
+              "additionalProperties": false
+            },
+            "limits": {
+              "anyOf": [
+                {
+                  "type": "null"
+                },
+                {
+                  "type": "object",
+                  "properties": {
+                    "maxBytes": {
+                      "type": "integer",
+                      "minimum": 1,
+                      "maximum": 5242880
+                    },
+                    "maxTextChars": {
+                      "type": "integer",
+                      "minimum": 1,
+                      "maximum": 200000
+                    },
+                    "maxRows": {
+                      "type": "integer",
+                      "minimum": 1,
+                      "maximum": 1000
+                    },
+                    "maxCandidates": {
+                      "type": "integer",
+                      "minimum": 1,
+                      "maximum": 20
+                    },
+                    "maxZipEntries": {
+                      "type": "integer",
+                      "minimum": 1,
+                      "maximum": 200
+                    },
+                    "maxExpandedBytes": {
+                      "type": "integer",
+                      "minimum": 1,
+                      "maximum": 20971520
+                    },
+                    "maxEntryBytes": {
+                      "type": "integer",
+                      "minimum": 1,
+                      "maximum": 5242880
+                    },
+                    "maxEvidence": {
+                      "type": "integer",
+                      "minimum": 1,
+                      "maximum": 1500
+                    }
+                  },
+                  "required": [],
+                  "additionalProperties": false
+                }
+              ]
+            }
+          },
+          "required": [
+            "contractVersion",
+            "inputRevision",
+            "inputDigest",
+            "manualFields",
+            "documents",
+            "catalogSnapshot"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "contractVersion",
+        "requestId",
+        "operation",
+        "payload"
+      ],
+      "additionalProperties": false
+    }
+  ]
+}

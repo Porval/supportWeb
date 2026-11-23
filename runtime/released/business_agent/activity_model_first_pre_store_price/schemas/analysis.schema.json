@@ -1,0 +1,1272 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:jiatan:activity-intake:1.0:model-first:2.0.0",
+  "type": "object",
+  "properties": {
+    "contractVersion": {
+      "const": "activity-intake/1.0"
+    },
+    "engine": {
+      "const": "deepseek_model_first_v1"
+    },
+    "modelUsed": {
+      "const": true
+    },
+    "engineVersion": {
+      "const": "2.0.0"
+    },
+    "parserVersions": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "maxItems": 20
+    },
+    "matcherVersion": {
+      "type": "string"
+    },
+    "promptVersion": {
+      "const": "activity-model-first-prompt/1.0.6"
+    },
+    "inputRevision": {
+      "type": "integer"
+    },
+    "inputDigest": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$"
+    },
+    "catalogRevision": {
+      "type": "string",
+      "minLength": 1
+    },
+    "outcome": {
+      "enum": [
+        "needs_input",
+        "needs_confirmation"
+      ]
+    },
+    "candidates": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "candidateId": {
+            "type": "string"
+          },
+          "fields": {
+            "type": "object",
+            "properties": {
+              "activityName": {
+                "type": "object",
+                "properties": {
+                  "value": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "status": {
+                    "enum": [
+                      "explicit",
+                      "missing",
+                      "conflict"
+                    ]
+                  },
+                  "evidenceIds": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    },
+                    "maxItems": 1500
+                  }
+                },
+                "required": [
+                  "value",
+                  "status",
+                  "evidenceIds"
+                ],
+                "additionalProperties": false
+              },
+              "type": {
+                "type": "object",
+                "properties": {
+                  "value": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "status": {
+                    "enum": [
+                      "explicit",
+                      "missing",
+                      "conflict"
+                    ]
+                  },
+                  "evidenceIds": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    },
+                    "maxItems": 1500
+                  }
+                },
+                "required": [
+                  "value",
+                  "status",
+                  "evidenceIds"
+                ],
+                "additionalProperties": false
+              },
+              "platformCode": {
+                "type": "object",
+                "properties": {
+                  "value": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "status": {
+                    "enum": [
+                      "explicit",
+                      "missing",
+                      "conflict"
+                    ]
+                  },
+                  "evidenceIds": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    },
+                    "maxItems": 1500
+                  }
+                },
+                "required": [
+                  "value",
+                  "status",
+                  "evidenceIds"
+                ],
+                "additionalProperties": false
+              },
+              "sourceActivityId": {
+                "type": "object",
+                "properties": {
+                  "value": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "status": {
+                    "enum": [
+                      "explicit",
+                      "missing",
+                      "conflict"
+                    ]
+                  },
+                  "evidenceIds": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    },
+                    "maxItems": 1500
+                  }
+                },
+                "required": [
+                  "value",
+                  "status",
+                  "evidenceIds"
+                ],
+                "additionalProperties": false
+              },
+              "startAt": {
+                "type": "object",
+                "properties": {
+                  "value": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "status": {
+                    "enum": [
+                      "explicit",
+                      "missing",
+                      "conflict"
+                    ]
+                  },
+                  "evidenceIds": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    },
+                    "maxItems": 1500
+                  }
+                },
+                "required": [
+                  "value",
+                  "status",
+                  "evidenceIds"
+                ],
+                "additionalProperties": false
+              },
+              "endAt": {
+                "type": "object",
+                "properties": {
+                  "value": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "status": {
+                    "enum": [
+                      "explicit",
+                      "missing",
+                      "conflict"
+                    ]
+                  },
+                  "evidenceIds": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    },
+                    "maxItems": 1500
+                  }
+                },
+                "required": [
+                  "value",
+                  "status",
+                  "evidenceIds"
+                ],
+                "additionalProperties": false
+              },
+              "brandIds": {
+                "type": "object",
+                "properties": {
+                  "value": {
+                    "type": [
+                      "array",
+                      "null"
+                    ],
+                    "items": {
+                      "type": "string"
+                    }
+                  },
+                  "status": {
+                    "enum": [
+                      "explicit",
+                      "missing",
+                      "conflict"
+                    ]
+                  },
+                  "evidenceIds": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    },
+                    "maxItems": 1500
+                  }
+                },
+                "required": [
+                  "value",
+                  "status",
+                  "evidenceIds"
+                ],
+                "additionalProperties": false
+              },
+              "rulesText": {
+                "type": "object",
+                "properties": {
+                  "value": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "status": {
+                    "enum": [
+                      "explicit",
+                      "missing",
+                      "conflict"
+                    ]
+                  },
+                  "evidenceIds": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    },
+                    "maxItems": 1500
+                  }
+                },
+                "required": [
+                  "value",
+                  "status",
+                  "evidenceIds"
+                ],
+                "additionalProperties": false
+              },
+              "brandBenefit": {
+                "type": "object",
+                "properties": {
+                  "value": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "status": {
+                    "enum": [
+                      "explicit",
+                      "missing",
+                      "conflict"
+                    ]
+                  },
+                  "evidenceIds": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    },
+                    "maxItems": 1500
+                  }
+                },
+                "required": [
+                  "value",
+                  "status",
+                  "evidenceIds"
+                ],
+                "additionalProperties": false
+              },
+              "remark": {
+                "type": "object",
+                "properties": {
+                  "value": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "status": {
+                    "enum": [
+                      "explicit",
+                      "missing",
+                      "conflict"
+                    ]
+                  },
+                  "evidenceIds": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    },
+                    "maxItems": 1500
+                  }
+                },
+                "required": [
+                  "value",
+                  "status",
+                  "evidenceIds"
+                ],
+                "additionalProperties": false
+              },
+              "companyBearing": {
+                "type": "object",
+                "properties": {
+                  "value": {
+                    "type": "object",
+                    "properties": {
+                      "state": {
+                        "enum": [
+                          "yes",
+                          "no",
+                          "unknown"
+                        ]
+                      },
+                      "evidenceIds": {
+                        "type": "array",
+                        "items": {
+                          "type": "string"
+                        },
+                        "maxItems": 1500
+                      }
+                    },
+                    "required": [
+                      "state",
+                      "evidenceIds"
+                    ],
+                    "additionalProperties": false
+                  },
+                  "status": {
+                    "enum": [
+                      "explicit",
+                      "missing",
+                      "conflict"
+                    ]
+                  },
+                  "evidenceIds": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    },
+                    "maxItems": 1500
+                  }
+                },
+                "required": [
+                  "value",
+                  "status",
+                  "evidenceIds"
+                ],
+                "additionalProperties": false
+              }
+            },
+            "required": [
+              "activityName",
+              "type",
+              "platformCode",
+              "sourceActivityId",
+              "startAt",
+              "endAt",
+              "brandIds",
+              "rulesText",
+              "brandBenefit",
+              "remark",
+              "companyBearing"
+            ],
+            "additionalProperties": false
+          },
+          "productRows": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "rowId": {
+                  "type": "string"
+                },
+                "rawInternalCode": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "rawUpc": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "rawName": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "matchKind": {
+                  "enum": [
+                    "exact",
+                    "manual_selected",
+                    "candidate",
+                    "unmatched",
+                    "conflict"
+                  ]
+                },
+                "matchedProductId": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "candidates": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "productId": {
+                        "type": "string"
+                      },
+                      "reasons": {
+                        "type": "array",
+                        "items": {
+                          "type": "string"
+                        },
+                        "maxItems": 1000
+                      }
+                    },
+                    "required": [
+                      "productId",
+                      "reasons"
+                    ],
+                    "additionalProperties": false
+                  },
+                  "maxItems": 10
+                },
+                "evidenceIds": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  },
+                  "maxItems": 1500
+                },
+                "rawSpec": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "sourceRowIds": {
+                  "type": "array",
+                  "minItems": 1,
+                  "maxItems": 2,
+                  "uniqueItems": true,
+                  "items": {
+                    "type": "string",
+                    "pattern": "^r[1-9][0-9]*$"
+                  }
+                }
+              },
+              "required": [
+                "rowId",
+                "rawInternalCode",
+                "rawUpc",
+                "rawName",
+                "matchKind",
+                "matchedProductId",
+                "candidates",
+                "evidenceIds",
+                "rawSpec",
+                "sourceRowIds"
+              ],
+              "additionalProperties": false
+            },
+            "maxItems": 1000
+          }
+        },
+        "required": [
+          "candidateId",
+          "fields",
+          "productRows"
+        ],
+        "additionalProperties": false
+      },
+      "maxItems": 20
+    },
+    "evidence": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "evidenceId": {
+            "type": "string"
+          },
+          "materialId": {
+            "type": "string"
+          },
+          "sourceSha256": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$"
+          },
+          "locator": {
+            "type": "object",
+            "properties": {
+              "kind": {
+                "enum": [
+                  "text",
+                  "csv",
+                  "xlsx",
+                  "docx",
+                  "form"
+                ]
+              },
+              "line": {
+                "type": "integer"
+              },
+              "start": {
+                "type": "integer"
+              },
+              "end": {
+                "type": "integer"
+              },
+              "lineStart": {
+                "type": "integer"
+              },
+              "lineEnd": {
+                "type": "integer"
+              },
+              "row": {
+                "type": "integer"
+              },
+              "column": {
+                "type": "integer"
+              },
+              "sheet": {
+                "type": "string"
+              },
+              "cell": {
+                "type": "string"
+              },
+              "paragraph": {
+                "type": "integer"
+              },
+              "table": {
+                "type": "integer"
+              },
+              "fieldPath": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "kind"
+            ],
+            "additionalProperties": false
+          },
+          "quote": {
+            "type": "string",
+            "maxLength": 500
+          }
+        },
+        "required": [
+          "evidenceId",
+          "materialId",
+          "sourceSha256",
+          "locator",
+          "quote"
+        ],
+        "additionalProperties": false
+      },
+      "maxItems": 6000
+    },
+    "missingFields": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "field": {
+            "type": "string"
+          },
+          "reasonCode": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "field",
+          "reasonCode"
+        ],
+        "additionalProperties": false
+      },
+      "maxItems": 1000
+    },
+    "conflicts": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "field": {
+            "type": "string"
+          },
+          "manualValue": {},
+          "extractedValues": {
+            "type": "array",
+            "items": {},
+            "maxItems": 1000
+          },
+          "evidenceIds": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "maxItems": 1500
+          }
+        },
+        "required": [
+          "field",
+          "manualValue",
+          "extractedValues",
+          "evidenceIds"
+        ],
+        "additionalProperties": false
+      },
+      "maxItems": 1000
+    },
+    "materialResults": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "materialId": {
+            "type": "string"
+          },
+          "sha256": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$"
+          },
+          "status": {
+            "enum": [
+              "parsed",
+              "unsupported",
+              "invalid",
+              "partial"
+            ]
+          },
+          "kind": {
+            "type": "string"
+          },
+          "textBlocks": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "text": {
+                  "type": "string"
+                },
+                "locator": {
+                  "type": "object",
+                  "properties": {
+                    "kind": {
+                      "enum": [
+                        "text",
+                        "csv",
+                        "xlsx",
+                        "docx",
+                        "form"
+                      ]
+                    },
+                    "line": {
+                      "type": "integer"
+                    },
+                    "start": {
+                      "type": "integer"
+                    },
+                    "end": {
+                      "type": "integer"
+                    },
+                    "lineStart": {
+                      "type": "integer"
+                    },
+                    "lineEnd": {
+                      "type": "integer"
+                    },
+                    "row": {
+                      "type": "integer"
+                    },
+                    "column": {
+                      "type": "integer"
+                    },
+                    "sheet": {
+                      "type": "string"
+                    },
+                    "cell": {
+                      "type": "string"
+                    },
+                    "paragraph": {
+                      "type": "integer"
+                    },
+                    "table": {
+                      "type": "integer"
+                    },
+                    "fieldPath": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "kind"
+                  ],
+                  "additionalProperties": false
+                }
+              },
+              "required": [
+                "text",
+                "locator"
+              ],
+              "additionalProperties": false
+            },
+            "maxItems": 200000
+          },
+          "tableRows": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "locator": {
+                  "type": "object",
+                  "properties": {
+                    "kind": {
+                      "enum": [
+                        "text",
+                        "csv",
+                        "xlsx",
+                        "docx",
+                        "form"
+                      ]
+                    },
+                    "line": {
+                      "type": "integer"
+                    },
+                    "start": {
+                      "type": "integer"
+                    },
+                    "end": {
+                      "type": "integer"
+                    },
+                    "lineStart": {
+                      "type": "integer"
+                    },
+                    "lineEnd": {
+                      "type": "integer"
+                    },
+                    "row": {
+                      "type": "integer"
+                    },
+                    "column": {
+                      "type": "integer"
+                    },
+                    "sheet": {
+                      "type": "string"
+                    },
+                    "cell": {
+                      "type": "string"
+                    },
+                    "paragraph": {
+                      "type": "integer"
+                    },
+                    "table": {
+                      "type": "integer"
+                    },
+                    "fieldPath": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "kind"
+                  ],
+                  "additionalProperties": false
+                },
+                "cells": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "column": {
+                        "type": "string"
+                      },
+                      "text": {
+                        "type": "string"
+                      },
+                      "sourceType": {
+                        "enum": [
+                          "string",
+                          "number",
+                          "formula",
+                          "blank"
+                        ]
+                      },
+                      "locator": {
+                        "type": "object",
+                        "properties": {
+                          "kind": {
+                            "enum": [
+                              "text",
+                              "csv",
+                              "xlsx",
+                              "docx",
+                              "form"
+                            ]
+                          },
+                          "line": {
+                            "type": "integer"
+                          },
+                          "start": {
+                            "type": "integer"
+                          },
+                          "end": {
+                            "type": "integer"
+                          },
+                          "lineStart": {
+                            "type": "integer"
+                          },
+                          "lineEnd": {
+                            "type": "integer"
+                          },
+                          "row": {
+                            "type": "integer"
+                          },
+                          "column": {
+                            "type": "integer"
+                          },
+                          "sheet": {
+                            "type": "string"
+                          },
+                          "cell": {
+                            "type": "string"
+                          },
+                          "paragraph": {
+                            "type": "integer"
+                          },
+                          "table": {
+                            "type": "integer"
+                          },
+                          "fieldPath": {
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "kind"
+                        ],
+                        "additionalProperties": false
+                      }
+                    },
+                    "required": [
+                      "column",
+                      "text",
+                      "sourceType",
+                      "locator"
+                    ],
+                    "additionalProperties": false
+                  },
+                  "maxItems": 1000
+                }
+              },
+              "required": [
+                "locator",
+                "cells"
+              ],
+              "additionalProperties": false
+            },
+            "maxItems": 1001
+          },
+          "errors": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "code": {
+                  "type": "string"
+                },
+                "message": {
+                  "type": "string"
+                },
+                "locator": {
+                  "type": "object",
+                  "properties": {
+                    "kind": {
+                      "enum": [
+                        "text",
+                        "csv",
+                        "xlsx",
+                        "docx",
+                        "form"
+                      ]
+                    },
+                    "line": {
+                      "type": "integer"
+                    },
+                    "start": {
+                      "type": "integer"
+                    },
+                    "end": {
+                      "type": "integer"
+                    },
+                    "lineStart": {
+                      "type": "integer"
+                    },
+                    "lineEnd": {
+                      "type": "integer"
+                    },
+                    "row": {
+                      "type": "integer"
+                    },
+                    "column": {
+                      "type": "integer"
+                    },
+                    "sheet": {
+                      "type": "string"
+                    },
+                    "cell": {
+                      "type": "string"
+                    },
+                    "paragraph": {
+                      "type": "integer"
+                    },
+                    "table": {
+                      "type": "integer"
+                    },
+                    "fieldPath": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "kind"
+                  ],
+                  "additionalProperties": false
+                }
+              },
+              "required": [
+                "code",
+                "message"
+              ],
+              "additionalProperties": false
+            },
+            "maxItems": 1000
+          },
+          "warnings": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "code": {
+                  "type": "string"
+                },
+                "message": {
+                  "type": "string"
+                },
+                "locator": {
+                  "type": "object",
+                  "properties": {
+                    "kind": {
+                      "enum": [
+                        "text",
+                        "csv",
+                        "xlsx",
+                        "docx",
+                        "form"
+                      ]
+                    },
+                    "line": {
+                      "type": "integer"
+                    },
+                    "start": {
+                      "type": "integer"
+                    },
+                    "end": {
+                      "type": "integer"
+                    },
+                    "lineStart": {
+                      "type": "integer"
+                    },
+                    "lineEnd": {
+                      "type": "integer"
+                    },
+                    "row": {
+                      "type": "integer"
+                    },
+                    "column": {
+                      "type": "integer"
+                    },
+                    "sheet": {
+                      "type": "string"
+                    },
+                    "cell": {
+                      "type": "string"
+                    },
+                    "paragraph": {
+                      "type": "integer"
+                    },
+                    "table": {
+                      "type": "integer"
+                    },
+                    "fieldPath": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "kind"
+                  ],
+                  "additionalProperties": false
+                }
+              },
+              "required": [
+                "code",
+                "message"
+              ],
+              "additionalProperties": false
+            },
+            "maxItems": 1000
+          },
+          "parserVersion": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "materialId",
+          "sha256",
+          "status",
+          "kind",
+          "textBlocks",
+          "tableRows",
+          "errors",
+          "warnings",
+          "parserVersion"
+        ],
+        "additionalProperties": false
+      },
+      "maxItems": 20
+    },
+    "warnings": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string"
+          },
+          "message": {
+            "type": "string"
+          },
+          "locator": {
+            "type": "object",
+            "properties": {
+              "kind": {
+                "enum": [
+                  "text",
+                  "csv",
+                  "xlsx",
+                  "docx",
+                  "form"
+                ]
+              },
+              "line": {
+                "type": "integer"
+              },
+              "start": {
+                "type": "integer"
+              },
+              "end": {
+                "type": "integer"
+              },
+              "lineStart": {
+                "type": "integer"
+              },
+              "lineEnd": {
+                "type": "integer"
+              },
+              "row": {
+                "type": "integer"
+              },
+              "column": {
+                "type": "integer"
+              },
+              "sheet": {
+                "type": "string"
+              },
+              "cell": {
+                "type": "string"
+              },
+              "paragraph": {
+                "type": "integer"
+              },
+              "table": {
+                "type": "integer"
+              },
+              "fieldPath": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "kind"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "required": [
+          "code",
+          "message"
+        ],
+        "additionalProperties": false
+      },
+      "maxItems": 10000
+    },
+    "errors": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string"
+          },
+          "message": {
+            "type": "string"
+          },
+          "locator": {
+            "type": "object",
+            "properties": {
+              "kind": {
+                "enum": [
+                  "text",
+                  "csv",
+                  "xlsx",
+                  "docx",
+                  "form"
+                ]
+              },
+              "line": {
+                "type": "integer"
+              },
+              "start": {
+                "type": "integer"
+              },
+              "end": {
+                "type": "integer"
+              },
+              "lineStart": {
+                "type": "integer"
+              },
+              "lineEnd": {
+                "type": "integer"
+              },
+              "row": {
+                "type": "integer"
+              },
+              "column": {
+                "type": "integer"
+              },
+              "sheet": {
+                "type": "string"
+              },
+              "cell": {
+                "type": "string"
+              },
+              "paragraph": {
+                "type": "integer"
+              },
+              "table": {
+                "type": "integer"
+              },
+              "fieldPath": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "kind"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "required": [
+          "code",
+          "message"
+        ],
+        "additionalProperties": false
+      },
+      "maxItems": 1000
+    }
+  },
+  "required": [
+    "contractVersion",
+    "engine",
+    "modelUsed",
+    "engineVersion",
+    "parserVersions",
+    "matcherVersion",
+    "promptVersion",
+    "inputRevision",
+    "inputDigest",
+    "catalogRevision",
+    "outcome",
+    "candidates",
+    "evidence",
+    "missingFields",
+    "conflicts",
+    "materialResults",
+    "warnings",
+    "errors"
+  ],
+  "additionalProperties": false
+}

@@ -1,0 +1,18 @@
+{
+  "eventId": "JT-024:deepseek-model-recognition-r1:agent_engineer",
+  "workerVersion": "1.0.0",
+  "contractVersion": "activity-model-recognition/1.0",
+  "promptVersion": "activity-model-recognition-prompt/1.0.0",
+  "architectureSha256": "c014fdad60e51f3768b44b7d60764067ead2a51c370648255bf87dd677d25456",
+  "baselineActivityMethodManifestSha256": "900751c7ab434fd1442aef4de4ab395f5bd34b7485233d188c6a0af30facc0c6",
+  "files": {
+    "README.md": "99cb320c11ea02495970c300beff5d82b012d3a20ab8d252fd1184dfbb0b2b2f",
+    "adapter.py": "3ad26b221c82193bf301dc70d9c7504f1f4e3740e9c8f9e4f3f837997fa35979",
+    "worker.py": "f0bb0f66898ffabb520eeb75d8272debc8d8323788f54710e748d460eb6dbf7c",
+    "prompt-v1.txt": "037c019dfb0e09efc77079a2dd43c9491ef7a6d947314628f81c0a5049324590",
+    "checks.py": "6ee6c0bc5c9436712c962875c8c6b8d96ba2c157e8854a65123c08453ea0f850",
+    "schemas/provider-output.schema.json": "e5aa2741046ae3bfd4221b6f7ef68e97e8d148d7f826b25ebe1213afd4e00e1a",
+    "schemas/worker-input.schema.json": "b12944324232fb785877eb17ea531c0c60975c4eb2af25dabdf34c359d83cb45",
+    "checks-results.json": "5d94815540d9b9a3012f27fa89ad15cb6083be605f99a40eda31ba4e2b5afefb"
+  }
+}

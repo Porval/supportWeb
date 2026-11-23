@@ -1,0 +1,27 @@
+# Private deployment configuration and credentials
+/bootstrap.json
+/workbench_sms_route.json
+/private-data/
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.token
+*.cnf
+.activityagent/
+# Runtime state, uploads and local release artifacts
+/data/
+/agent-mysql/
+/attachments/
+/uploads/
+*.sqlite*
+*.db
+*.db-*
+*.zip
+*.xlsx
+*.xls
+*.log
+__pycache__/
+*.py[cod]
+.DS_Store
