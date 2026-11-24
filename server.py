@@ -18,7 +18,7 @@ from workbench_settings import ADMIN_PHONE, PUBLIC_HOSTS, PUBLIC_ORIGIN
 ROOT = Path(__file__).resolve().parent
 API = '/api/activity/v1'
 ORIGIN = PUBLIC_ORIGIN
-BUILD = 'jt024-hosted-20261123.8'
+BUILD = 'jt024-hosted-20261124.4'
 PUBLIC = ROOT / 'front'
 sys.path.insert(0, str(ROOT / 'runtime'))
 
@@ -52,7 +52,9 @@ class Handler(BaseHTTPRequestHandler):
         if self.server.phone_otp:
             view['sms'] = {'status': 'configured'}
         flags = view.setdefault('capabilities', {})
+        flags['anonymousReadOnly'] = True
         flags['activityAgentChat'] = (view.get('authenticated') is True
+            and view.get('anonymous') is not True
             and flags.get('fullAccessAdministrator') is True
             and (view.get('user') or {}).get('username') == ADMIN_PHONE)
         return view
@@ -82,7 +84,7 @@ class Handler(BaseHTTPRequestHandler):
     def account(self, path, query, headers):
         from account_primitives import fail
         otp = self.server.phone_otp
-        post_fields = {'/account/logout': set()}
+        post_fields = {'/account/logout': set(), '/account/auth/anonymous': set()}
         if otp:
             post_fields.update({'/account/auth/otp/request': {'phone'},
                                 '/account/auth/otp/verify': {'challengeId', 'code'}})
@@ -111,6 +113,10 @@ class Handler(BaseHTTPRequestHandler):
             result = state.logout(sid)
             headers['Set-Cookie'] = self.cookie()
             return result
+        if path == '/account/auth/anonymous':
+            view, token, expires = state.anonymous_login(sid)
+            headers['Set-Cookie'] = self.cookie(token, expires)
+            return self.session_capabilities(view)
         if path == '/account/auth/otp/request':
             from hosted_otp import request_sms
             return request_sms(state, sid, data, self.server.sms_transport)

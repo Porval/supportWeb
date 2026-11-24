@@ -1,6 +1,9 @@
 """Server-only client for the existing PriceTag SMS challenge and verification API."""
+import datetime as dt
+import hashlib
 import http.client
 import json
+import logging
 import os
 from pathlib import Path
 import re
@@ -28,9 +31,31 @@ class SmsRouteError(ValueError):
 
 
 class GatewayUnavailable(Exception):
-    def __init__(self, code='SMS_GATEWAY_UNAVAILABLE'):
+    def __init__(self, code='SMS_GATEWAY_UNAVAILABLE', detail=None):
         self.code = code
+        self.detail = detail
         super().__init__(code)
+
+
+def _safe_detail(status, raw):
+    """Extract a sanitized, non-secret reason from a gateway rejection response."""
+    detail = None
+    if raw:
+        try:
+            body = _json(bytes(raw[:MAX_RECEIPT]))
+            if isinstance(body, dict):
+                for key in ('error', 'msg', 'message'):
+                    val = body.get(key)
+                    if isinstance(val, str) and val.strip():
+                        detail = val.strip()
+                        break
+        except (ValueError, UnicodeError, RecursionError):
+            pass
+    if detail:
+        detail = re.sub(r'\b\d{6}\b', '***', detail)
+        detail = ' '.join(detail.split())[:120]
+        return f'HTTP {status}: {detail}' if status is not None else detail
+    return f'HTTP {status}' if status is not None else None
 
 
 def _unique(pairs):
@@ -88,6 +113,17 @@ def load_gateway(root):
             raise SmsRouteError()
         if set(config) == {'baseUrl'}:
             return SMSGateway(config['baseUrl'])
+        if (set(config) == {'baseUrl', 'mode', 'appKey', 'appSecret', 'loginEnabled'}
+                and config['mode'] == 'signed_remote'
+                and isinstance(config['appKey'], str) and 8 <= len(config['appKey']) <= 128
+                and isinstance(config['appSecret'], str) and 8 <= len(config['appSecret']) <= 256
+                and type(config['loginEnabled']) is bool):
+            return SMSGateway(
+                config['baseUrl'],
+                app_key=config['appKey'],
+                app_secret=config['appSecret'],
+                login_enabled=config['loginEnabled'],
+            )
         if (set(config) != {'baseUrl', 'mode', 'template', 'phoneField', 'codeField', 'loginEnabled'}
                 or config['mode'] != 'remote' or config['phoneField'] != 'number'
                 or config['codeField'] != 'code' or config['template'] != TEMPLATE
@@ -128,36 +164,46 @@ def _unconfirmed(reason):
     return {'accepted': False, 'delivery': 'unconfirmed', 'reason': reason}
 
 
-def _delivery_result(reply, workbench_code):
+def _delivery_result(reply, workbench_code, *, use_gateway_code=False):
     if not isinstance(reply, dict) or type(reply.get('success')) is not bool:
         raise GatewayUnavailable('SMS_GATEWAY_PROTOCOL_ERROR')
     if not reply['success']:
+        detail = _safe_detail(None, json.dumps(reply, ensure_ascii=False).encode('utf-8'))
+        if detail:
+            logging.warning('sms_gateway_rejected detail=%s', detail)
         return {'accepted': False}
     allowed = {'success', 'smsSent', 'msg', 'verificationCode', 'expiresInMs', 'cooldownMs', 'error'}
     if not set(reply) <= allowed or (reply.get('error') is not None and reply['error'] is not False):
         raise GatewayUnavailable('SMS_GATEWAY_PROTOCOL_ERROR')
-    if 'msg' in reply and (not isinstance(reply['msg'], str) or workbench_code in reply['msg']):
+    if 'msg' in reply and (not isinstance(reply['msg'], str) or (workbench_code and workbench_code in reply['msg'])):
         raise GatewayUnavailable('SMS_GATEWAY_PROTOCOL_ERROR')
     for field in ('expiresInMs', 'cooldownMs'):
         if field in reply and (type(reply[field]) is not int or reply[field] < 0):
             raise GatewayUnavailable('SMS_GATEWAY_PROTOCOL_ERROR')
+    issued_code = None
     if 'verificationCode' in reply:
         gateway_code = reply['verificationCode']
         if type(gateway_code) is int and 0 <= gateway_code <= 999999:
             gateway_code = f'{gateway_code:06d}'
-        if (not isinstance(gateway_code, str) or not _CODE.fullmatch(gateway_code)
-                or gateway_code == workbench_code):
+        if not isinstance(gateway_code, str) or not _CODE.fullmatch(gateway_code):
             raise GatewayUnavailable('SMS_GATEWAY_PROTOCOL_ERROR')
+        if use_gateway_code:
+            issued_code = gateway_code
+        elif gateway_code == workbench_code:
+            raise GatewayUnavailable('SMS_GATEWAY_PROTOCOL_ERROR')
+    if use_gateway_code and issued_code is None:
+        raise GatewayUnavailable('SMS_GATEWAY_PROTOCOL_ERROR')
+    extra = {'issuedCode': issued_code} if use_gateway_code else {}
     if 'smsSent' not in reply:
         # A lone success flag cannot identify this gateway's delivery receipt.
         if not {'verificationCode', 'expiresInMs', 'cooldownMs'} <= set(reply):
             raise GatewayUnavailable('SMS_GATEWAY_PROTOCOL_ERROR')
-        return _unconfirmed('gateway_delivery_unconfirmed')
+        return _unconfirmed('gateway_delivery_unconfirmed') | extra
     if type(reply['smsSent']) is not bool:
         raise GatewayUnavailable('SMS_GATEWAY_PROTOCOL_ERROR')
     if not reply['smsSent']:
-        return _unconfirmed('gateway_delivery_unconfirmed')
-    return {'accepted': True}
+        return _unconfirmed('gateway_delivery_unconfirmed') | extra
+    return {'accepted': True} | extra
 
 
 def _proxy_delivery_result(status, raw, workbench_code):
@@ -178,14 +224,25 @@ def _proxy_delivery_result(status, raw, workbench_code):
 class SMSGateway:
     status = 'configured'
 
-    def __init__(self, base_url, *, template=TEMPLATE, login_enabled=False):
+    def __init__(self, base_url, *, template=TEMPLATE, app_key=None, app_secret=None, login_enabled=False):
         self._base_path = _route(base_url)
         self._template = template
+        self._app_key = app_key
+        self._app_secret = app_secret
         self.login_enabled = login_enabled
+
+    def _signed_payload(self, fields):
+        stamp = dt.datetime.now(dt.timezone.utc).isoformat(timespec='milliseconds').replace('+00:00', 'Z')
+        params = dict(fields, appKey=self._app_key, date=stamp)
+        canonical = '&'.join(f'{key}={params[key]}' for key in sorted(params))
+        params['sign'] = hashlib.sha256((canonical + self._app_secret).encode('utf-8')).hexdigest()
+        return params
 
     def request_code(self, phone):
         if not isinstance(phone, str) or not _PHONE.fullmatch(phone):
             raise ValueError('手机号无效')
+        if self._app_key and self._app_secret:
+            return self._post('requestCode', self._signed_payload({'number': phone}))
         return self._post('requestCode', {'number': phone, 'template': self._template})
 
     def send_login_code(self, phone, code, challenge_id, expires_at):
@@ -193,6 +250,9 @@ class SMSGateway:
             raise ValueError('手机号无效')
         if not isinstance(code, str) or not _CODE.fullmatch(code):
             raise ValueError('验证码格式无效')
+        if self._app_key and self._app_secret:
+            payload = self._signed_payload({'number': phone[3:]})
+            return self._post('requestCode', payload, workbench_code=code, use_gateway_code=True)
         if self._template != TEMPLATE:
             raise SmsRouteError()
         message = self._template.replace('${code}', code)
@@ -203,7 +263,7 @@ class SMSGateway:
             raise ValueError('手机号或验证码格式无效')
         return self._post('verifyCode', {'number': phone, 'code': code})
 
-    def _post(self, endpoint, data, *, workbench_code=None):
+    def _post(self, endpoint, data, *, workbench_code=None, use_gateway_code=False):
         connection = None
         body_written = False
         awaiting_delivery = False
@@ -218,11 +278,20 @@ class SMSGateway:
             with connection.getresponse() as response:
                 awaiting_delivery = False
                 if response.status == 429:
-                    raise GatewayUnavailable('SMS_GATEWAY_RATE_LIMITED')
+                    detail = None
+                    if workbench_code is not None:
+                        detail = _safe_detail(429, response.read(MAX_RECEIPT))
+                        if detail:
+                            logging.warning('sms_gateway_rate_limited detail=%s', detail)
+                    raise GatewayUnavailable('SMS_GATEWAY_RATE_LIMITED', detail=detail)
                 verify_rejection = endpoint == 'verifyCode' and response.status in (400, 401, 403, 422)
                 proxy_error = workbench_code is not None and response.status in (502, 503, 504)
                 if workbench_code is not None and 400 <= response.status < 500:
-                    raise GatewayUnavailable('SMS_GATEWAY_REJECTED')
+                    raw_err = response.read(MAX_RECEIPT)
+                    detail = _safe_detail(response.status, raw_err)
+                    if detail:
+                        logging.warning('sms_gateway_rejected detail=%s', detail)
+                    raise GatewayUnavailable('SMS_GATEWAY_REJECTED', detail=detail)
                 if not (200 <= response.status < 300 or verify_rejection or proxy_error):
                     raise GatewayUnavailable()
                 if response.getheader('Set-Cookie'):
@@ -259,7 +328,7 @@ class SMSGateway:
                         return False
                     raise GatewayUnavailable()
                 if workbench_code is not None:
-                    return _delivery_result(reply, workbench_code)
+                    return _delivery_result(reply, workbench_code, use_gateway_code=use_gateway_code)
                 return _confirmed(reply)
             except (ValueError, RecursionError):
                 raise GatewayUnavailable('SMS_GATEWAY_PROTOCOL_ERROR') from None

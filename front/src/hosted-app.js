@@ -95,7 +95,7 @@ function shell(content){
  if(signed&&permitted('submissions.read_own'))links.push(nav('#submissions','我的提报',current.route.startsWith('submissions')));
  if(signed&&permitted('reviews.read'))links.push(nav('#reviews?view=pending','审核待办',current.route.startsWith('review')));
  if(signed&&permitted('accounts.manage'))links.push(nav('#accounts','账号管理',current.route==='accounts'),nav('#schedule','开发排期',planning));
- const identity=signed?`<span class="test-header-identity"><strong>${h(session.user.name||'已登录')}</strong><span>${h(role)}</span></span><button type="button" data-test-action="profile">本人信息</button><button type="button" data-test-action="logout" ${logoutBusy?'disabled':''}>退出登录</button>`:badge('未登录');
+ const identity=signed?(session.anonymous===true?`<span class="test-header-identity"><strong>匿名访客</strong><span>只读查看</span></span><button type="button" data-test-action="logout" ${logoutBusy?'disabled':''}>账号登录</button>`:`<span class="test-header-identity"><strong>${h(session.user.name||'已登录')}</strong><span>${h(role)}</span></span><button type="button" data-test-action="profile">本人信息</button><button type="button" data-test-action="logout" ${logoutBusy?'disabled':''}>退出登录</button>`):badge('未登录');
  return `<div class="layout test-shell"><aside><a class="brand" href="#activity"><span class="logo" aria-hidden="true">价</span><b>价探</b></a><nav aria-label="主导航">${links.join('')}</nav></aside><div class="workspace"><header class="topbar"><span>价探 · ${planning?'开发排期':'活动运营'}</span><div class="row">${signed&&session.readOnly?badge('只读'):''}${identity}</div></header><main id="main" tabindex="-1">${content}</main><footer>价探 · 活动工作台<span>日期与时间均为北京时间</span></footer></div></div>`;
 }
 function canDecideVersion(version) {
@@ -157,7 +157,7 @@ function frame(content,{workbenchView}={}){
   }}
 
  }
- if(session?.authenticated){const pending=['schedule','schedule/pool'].includes(current.route)?[]:commands.pending().filter(record=>!submissions.ownsPending?.(record)&&!platformMaterials?.ownsPending(record));if(pending.length){const section=document.createElement('section');section.className='b-recovery';section.setAttribute('aria-label','请求结果恢复');section.innerHTML=`<h2>有待核对的提交结果</h2><p>先读取原请求回执；“未找到”也不能证明在途请求不会提交。重试只沿用原键和正文。</p>${pending.map(r=>`<p>${h(ACTION_LABELS[r.action]??'本次操作')} <button type="button" data-command-resolve="${h(r.slot)}">核对原请求结果</button>${r.body&&!(activityIntake&&r.action==='reviews.decide')?` <button type="button" data-command-retry="${h(r.slot)}">以原请求重试</button>`:' <span>原请求正文未留存；附件需重选同一文件，其他操作需恢复原输入。</span>'}</p>`).join('')}`;root.querySelector('#main')?.prepend(section)}const p=document.createElement('p');p.className='test-main-expiry';p.textContent=`会话到期：${beijing(session.absoluteExpiresAt)??'待核实'}。`;root.querySelector('#main')?.append(p)}
+ if(session?.authenticated){const pending=session.anonymous===true||['schedule','schedule/pool'].includes(current.route)?[]:commands.pending().filter(record=>!submissions.ownsPending?.(record)&&!platformMaterials?.ownsPending(record));if(pending.length){const section=document.createElement('section');section.className='b-recovery';section.setAttribute('aria-label','请求结果恢复');section.innerHTML=`<h2>有待核对的提交结果</h2><p>先读取原请求回执；“未找到”也不能证明在途请求不会提交。重试只沿用原键和正文。</p>${pending.map(r=>`<p>${h(ACTION_LABELS[r.action]??'本次操作')} <button type="button" data-command-resolve="${h(r.slot)}">核对原请求结果</button>${r.body&&!(activityIntake&&r.action==='reviews.decide')?` <button type="button" data-command-retry="${h(r.slot)}">以原请求重试</button>`:' <span>原请求正文未留存；附件需重选同一文件，其他操作需恢复原输入。</span>'}</p>`).join('')}`;root.querySelector('#main')?.prepend(section)}const p=document.createElement('p');p.className='test-main-expiry';p.textContent=(session.anonymous===true?'匿名只读会话到期：':'会话到期：')+`${beijing(session.absoluteExpiresAt)??'待核实'}。`;root.querySelector('#main')?.append(p)}
  attachDownload();
 }
 function showProfile(){
@@ -170,16 +170,17 @@ function loginPage(message='',{retry=false,pendingLogout=false}={}){
  if(authMethod==='phone_otp'){
   const recovery=retry?'<button type="button" data-test-action="retry">重新核对会话</button>':'';
   const retryLogout=pendingLogout?'<button type="button" data-test-action="logout">重试退出当前会话</button>':'';
-  frame(`<section class="test-login"><h1 tabindex="-1">手机验证码登录</h1>
+  const extras=recovery||retryLogout?`<div class="test-login-recovery">${recovery}${retryLogout}</div>`:'';
+  frame(`<section class="test-login"><div class="test-login-head"><h1 tabindex="-1">登录活动工作台</h1><p class="test-login-sub">已开通账号请使用手机验证码登录，也可匿名只读浏览已有活动</p></div>
    <form id="hosted-phone-form" class="test-login-form" method="post" action="/api/activity/v1/account/auth/otp/verify">
-    <label for="hosted-phone">手机号</label>
-    <input id="hosted-phone" name="phone" type="tel" inputmode="tel" autocomplete="tel-national" required pattern="1[3-9][0-9]{9}" maxlength="11" placeholder="请输入手机号">
-    <label for="hosted-code">验证码</label><div class="password-input">
-    <input id="hosted-code" name="code" inputmode="numeric" autocomplete="one-time-code" required pattern="[0-9]{6}" maxlength="6" placeholder="请输入6位验证码">
-    <button type="button" id="send-code">获取验证码</button></div>
+    <div class="login-field"><label for="hosted-phone">手机号</label>
+    <input id="hosted-phone" name="phone" type="tel" inputmode="tel" autocomplete="tel-national" required pattern="1[3-9][0-9]{9}" maxlength="11" placeholder="请输入 11 位手机号"></div>
+    <div class="login-field"><label for="hosted-code">验证码</label><div class="password-input">
+    <input id="hosted-code" name="code" inputmode="numeric" autocomplete="one-time-code" required pattern="[0-9]{6}" maxlength="6" placeholder="请输入 6 位验证码">
+    <button type="button" id="send-code">获取验证码</button></div></div>
     <p id="test-login-message" class="warning test-login-message" role="status">${h(message)}</p>
-    <div class="actions"><button type="submit" class="primary" disabled>登录</button></div>
-   </form>${recovery}${retryLogout}</section>`);
+    <div class="test-login-actions"><button type="submit" class="primary" disabled>登录</button><button type="button" id="anonymous-login" class="secondary-login" data-test-action="anonymous-login">匿名登录</button></div>
+   </form>${extras}</section>`);
   mountPhoneLogin(root.querySelector('#hosted-phone-form'));
   return;
  }
@@ -188,19 +189,19 @@ function loginPage(message='',{retry=false,pendingLogout=false}={}){
   return;
  }
  const passwordField='activity-password';
- frame(`<section class="test-login"><div class="lock" aria-hidden="true">♙</div><h1 tabindex="-1">登录价探活动工作台</h1>
+ const extras=retry||pendingLogout?`<div class="test-login-recovery">${retry?'<button data-test-action="retry">重新核对会话</button>':''}${pendingLogout?'<button data-test-action="logout">重试退出当前会话</button>':''}</div>`:'';
+ frame(`<section class="test-login"><div class="test-login-head"><h1 tabindex="-1">登录活动工作台</h1><p class="test-login-sub">管理员请使用账号密码登录，也可匿名只读浏览已有活动</p></div>
  <form id="test-login-form" class="test-login-form" method="post" action="/api/activity/v1/account/login" novalidate>
- <label for="test-username">账号</label><input id="test-username" name="username" value="${h(usernameCache)}" autocomplete="username" autocapitalize="none" spellcheck="false" aria-describedby="username-error"><span id="username-error" class="field-error" aria-live="polite"></span>
- <label for="${passwordField}">密码</label><div class="password-input"><input id="${passwordField}" name="password" data-test-password type="password" autocomplete="current-password" aria-describedby="password-error"><button type="button" data-test-action="toggle-password" aria-controls="${passwordField}" aria-pressed="false">显示</button></div><span id="password-error" class="field-error" aria-live="polite"></span>
- <p id="test-login-message" class="warning test-login-message" role="status">${h(message)}</p><div class="actions"><button type="button" data-test-action="cancel-login">取消</button><button type="submit" class="primary" id="test-login-submit">登录</button></div></form>
- ${retry?'<button data-test-action="retry">重新核对会话</button>':''}${pendingLogout?'<button data-test-action="logout">重试退出当前会话</button>':''}</section>`);
+ <div class="login-field"><label for="test-username">账号</label><input id="test-username" name="username" value="${h(usernameCache)}" autocomplete="username" autocapitalize="none" spellcheck="false" aria-describedby="username-error"><span id="username-error" class="field-error" aria-live="polite"></span></div>
+ <div class="login-field"><label for="${passwordField}">密码</label><div class="password-input"><input id="${passwordField}" name="password" data-test-password type="password" autocomplete="current-password" aria-describedby="password-error"><button type="button" data-test-action="toggle-password" aria-controls="${passwordField}" aria-pressed="false">显示</button></div><span id="password-error" class="field-error" aria-live="polite"></span></div>
+ <p id="test-login-message" class="warning test-login-message" role="status">${h(message)}</p><div class="test-login-actions"><button type="submit" class="primary" id="test-login-submit">登录</button><button type="button" class="secondary-login" data-test-action="anonymous-login">匿名登录</button></div></form>${extras}</section>`);
  clearPassword();root.querySelector('h1')?.focus({preventScroll:true});
 }
 function setLoginMessage(text){const p=root.querySelector('#test-login-message');if(p)p.textContent=text}
 
 function mountPhoneLogin(form){
  const {phone,code}=form.elements;
- const send=form.querySelector('#send-code'),submit=form.querySelector('[type=submit]');
+ const send=form.querySelector('#send-code'),submit=form.querySelector('[type=submit]'),anon=form.querySelector('#anonymous-login');
  let challenge=null,cooldown=null,operation=null,timer=null,disposed=false;
  const unavailable=()=>smsStatus==='not_configured';
  function paint(){
@@ -211,12 +212,13 @@ function mountPhoneLogin(form){
    if(!operation)setLoginMessage('验证码已过期，请重新获取。');
   }
   const seconds=cooldown?.phone===phone.value?Math.max(0,Math.ceil((cooldown.until-now)/1000)):0;
-  const locked=Boolean(operation)||logoutBusy||recoveryBusy;
+  const locked=Boolean(operation)||loginBusy||logoutBusy||recoveryBusy;
   phone.readOnly=locked;code.readOnly=locked;
   send.disabled=locked||unavailable()||seconds>0;
   send.textContent=operation?.kind==='request'?'正在获取…':seconds?'重新获取（'+seconds+' 秒）':'获取验证码';
   submit.disabled=locked||unavailable()||!challenge||challenge.phone!==phone.value||!code.validity.valid;
   submit.textContent=operation?.kind==='verify'?'正在登录…':'登录';
+  if(anon){anon.disabled=locked;anon.textContent=loginBusy&&!operation?'正在进入…':'匿名登录'}
   form.setAttribute('aria-busy',String(locked));
   if(challenge||seconds>0)timer=setTimeout(paint,Math.min(1000,challenge?Math.max(1,challenge.expires-now):1000));
  }
@@ -314,7 +316,7 @@ function mountPhoneLogin(form){
  if(unavailable())setLoginMessage('短信服务尚未配置，暂不能获取验证码。');
  paint();phone.focus({preventScroll:true});
 }
-function busyLogin(busy){loginBusy=busy;root.querySelector('#hosted-phone-form')?.dispatchEvent(new Event('auth-progress'));const form=root.querySelector('#test-login-form');if(!form)return;form.setAttribute('aria-busy',String(busy));for(const e of form.querySelectorAll('input,button[type=submit],[data-test-action=toggle-password]'))e.disabled=busy;const submit=root.querySelector('#test-login-submit');if(submit)submit.textContent=busy?(logoutBusy?'正在退出…':recoveryBusy?'正在核对…':'正在登录…'):'登录';const cancel=form.querySelector('[data-test-action=cancel-login]');if(cancel)cancel.disabled=logoutBusy||recoveryBusy}
+function busyLogin(busy){loginBusy=busy;root.querySelector('#hosted-phone-form')?.dispatchEvent(new Event('auth-progress'));const form=root.querySelector('#test-login-form');if(!form)return;form.setAttribute('aria-busy',String(busy));for(const e of form.querySelectorAll('input,button[type=submit],[data-test-action=toggle-password],[data-test-action=anonymous-login]'))e.disabled=busy;const submit=root.querySelector('#test-login-submit');if(submit)submit.textContent=busy?(logoutBusy?'正在退出…':recoveryBusy?'正在核对…':'正在登录…'):'登录';const cancel=form.querySelector('[data-test-action=cancel-login]');if(cancel)cancel.disabled=logoutBusy||recoveryBusy}
 function saveContext(){positions.set(current.hash,window.scrollY)}
 function expiryCheck(){clearTimeout(expiryTimer);if(!session?.authenticated)return;const until=Math.min(Date.parse(session.absoluteExpiresAt),session.credentialExpiresAt==null?Infinity:Date.parse(session.credentialExpiresAt));expiryTimer=setTimeout(()=>{clearProtected();adapter.clear();loginPage('会话已到期，请重新登录。');render()},Math.max(0,Math.min(until-Date.now(),2147483647)))}
 async function render(){
@@ -336,7 +338,11 @@ async function render(){
   authMethod=value.authMethod;
   smsStatus=value.sms?.status??null;
   if(!value.authenticated){clearProtected();loginPage(reasonMessage(value.reason));return}
-  expiryCheck();commands.bind(value.user.id);
+  expiryCheck();if(value.anonymous!==true)commands.bind(value.user.id);
+  if(value.anonymous===true&&(current.route==='accounts'||current.route==='schedule'||current.route==='schedule/pool'||current.route==='report'||current.route==='reviews'||current.route.startsWith('submissions'))){
+   frame(empty('匿名查看仅支持浏览已有活动','请返回活动工作台查看已有活动版本，或切换已开通账号登录。','<a class="button" href="#activity">返回活动工作台</a> <button type="button" data-test-action="logout">账号登录</button>'));
+   return;
+  }
   let controller=activeController();
   const platformRoute=current.route.split('/')[2]==='platform';
   if(platformRoute||controller===submissions||controller===reviews){
@@ -486,10 +492,29 @@ async function performLogin(form){
 async function cancelLogin(){if(logoutBusy||recoveryBusy)return;usernameCache=root.querySelector('#test-username')?.value??usernameCache;const pending=loginBusy;++loginAttempt;loginController?.abort();loginController=null;clearPassword();busyLogin(false);if(!pending){for(const e of root.querySelectorAll('.field-error'))e.textContent='';for(const e of root.querySelectorAll('[aria-invalid]'))e.removeAttribute('aria-invalid');setLoginMessage('已取消登录，密码已清空。');return}
  recoveryBusy=true;clearProtected();loginPage('已取消提交，正在核对是否建立会话…');busyLogin(true);try{const s=await adapter.session();if(s.authenticated)await adapter.logout();adapter.clear();loginPage('已取消登录，当前没有可用的会话。')}catch{adapter.clear();loginPage('请求已取消，尚不能确认服务端会话结果，请核对或重试退出。',{retry:true,pendingLogout:true})}finally{recoveryBusy=false;busyLogin(false)}
 }
+async function performAnonymousLogin(){
+ if(loginBusy||logoutBusy||recoveryBusy)return;
+ const attempt=++loginAttempt,epoch=authEpoch;loginController=new AbortController();busyLogin(true);setLoginMessage('正在进入匿名查看模式…');
+ try{
+  const pre=await adapter.session({signal:loginController.signal});
+  if(attempt!==loginAttempt||epoch!==authEpoch)return;
+  const value=pre.authenticated?pre:await adapter.anonymousLogin({signal:loginController.signal});
+  if(attempt!==loginAttempt||epoch!==authEpoch)return;
+  if(value.authenticated!==true)throw new Error('服务尚未确认匿名查看会话。');
+  clearPassword();clearTimeout(noticeTimer);notice.textContent='';notice.classList.remove('visible');
+  session=value;busyLogin(false);
+  if(!['activity','brand','product'].includes(current.route.split('/')[0]))navigate('#activity');
+  else await render();
+ }catch(error){
+  if(attempt!==loginAttempt||epoch!==authEpoch)return;
+  setLoginMessage(errorMessage(error));
+ }finally{if(attempt===loginAttempt){busyLogin(false);loginController=null}}
+}
 async function logout(){if(logoutBusy||recoveryBusy)return;
+ const wasAnonymous=session?.anonymous===true;
  usernameCache='';
- logoutBusy=true;++loginAttempt;loginController?.abort();clearPassword();clearProtected();loginPage('正在退出登录，受保护资料已隐藏。');busyLogin(true);
- try{await adapter.logout();adapter.clear();loginPage('已退出登录。');notify('当前会话已由服务撤销。')}
+ logoutBusy=true;++loginAttempt;loginController?.abort();clearPassword();clearProtected();loginPage(wasAnonymous?'正在切换至登录页…':'正在退出登录，受保护资料已隐藏。');busyLogin(true);
+ try{await adapter.logout();adapter.clear();loginPage(wasAnonymous?'已退出匿名查看，请使用管理员手机号登录。':'已退出登录。');notify(wasAnonymous?'已退出匿名查看模式。':'当前会话已由服务撤销。')}
  catch(error){try{const value=await adapter.session();if(!value.authenticated){adapter.clear();loginPage('已确认当前没有有效会话。');return}}catch{}loginPage('尚不能确认退出结果，受保护资料已隐藏，请重试退出。',{pendingLogout:true,retry:true})}
  finally{logoutBusy=false;busyLogin(false)}
 }
@@ -588,7 +613,7 @@ root.addEventListener('submit',event=>{event.preventDefault();if(event.target.id
 root.addEventListener('click',async event=>{
  const testButton=event.target.closest('[data-test-action]');if(testButton){const action=testButton.dataset.testAction;
   if(action==='toggle-password'){const input=root.querySelector('[data-test-password]');const show=input.type==='password';input.type=show?'text':'password';testButton.textContent=show?'隐藏':'显示';testButton.setAttribute('aria-pressed',String(show))}
-  if(action==='profile'){showProfile();return}if(action==='profile-close'){root.querySelector('#test-profile-dialog')?.remove();root.querySelector('[data-test-action=profile]')?.focus();return}if(action==='cancel-login')await cancelLogin();if(action==='logout')await logout();if(action==='retry')render();return;
+  if(action==='profile'){showProfile();return}if(action==='profile-close'){root.querySelector('#test-profile-dialog')?.remove();root.querySelector('[data-test-action=profile]')?.focus();return}if(action==='anonymous-login'){await performAnonymousLogin();return}if(action==='cancel-login')await cancelLogin();if(action==='logout')await logout();if(action==='retry')render();return;
  }
  if(!session?.authenticated||logoutBusy)return;
  const saveCoupon=event.target.closest('#review-coupon-selection [data-review-coupon-save]');

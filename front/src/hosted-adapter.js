@@ -40,6 +40,7 @@ export function createHostedAdapter(transport=(...args)=>fetch(...args)){
   async material(id){return request('/materials/'+encodeURIComponent(id)+'/download',{binary:true})},
   async session({signal}={}){return remember((await request('/session',{account:true,signal})).data)},
   async login(username,password,{signal}={}){return remember((await request('/login',{account:true,method:'POST',body:{username,password},signal})).data)},
+  async anonymousLogin({signal}={}){return remember((await request('/auth/anonymous',{account:true,method:'POST',body:{},signal})).data)},
   async requestCode(phone,{signal}={}){return (await request('/auth/otp/request',{account:true,method:'POST',body:{phone},signal})).data},
   async verifyCode(challengeId,code,{signal}={}){return remember((await request('/auth/otp/verify',{account:true,method:'POST',body:{challengeId,code},signal})).data)},
   async logout({signal}={}){const env=await request('/logout',{account:true,method:'POST',body:{},signal});if(env.data.loggedOut!==true)throw new ApiError('尚不能确认退出结果','LOGOUT_UNKNOWN');sessionValue=null;return env.data},

@@ -1,24 +1,117 @@
 import {h,badge,rows,table,input,select,textarea,panel,pager,errorPanel,ROLE_LABELS} from './b-common.js';
 
 export function createAccountsController(ctx){
- let list={items:[],total:null,page:1,pageSize:10},params={},selected=null,draft=null,error=null,saving=false,discardPrompt=false,signal;
+ let list={items:[],total:null,page:1,pageSize:10},params={},selected=null,creating=false,draft=null,error=null,saving=false,discardPrompt=false,signal;
  function canManage(){return ctx.session()?.permissions?.includes('accounts.manage')===true}
- function dirty(){return selected&&draft&&(String(selected.name??'')!==String(draft.name??'')||(selected.businessRole??null)!==(draft.businessRole??null)||String(selected.remark??'')!==String(draft.remark??''))}
- function html(){const roles=Object.entries(ROLE_LABELS).map(([code,label])=>({code,label}));return `<div class="b-heading"><div><h1>账号管理</h1><p class="muted">管理人员资料与业务角色</p></div></div>${panel('人员资料',`<p class="hint">系统授权与业务角色分别设置。</p><form id="b-account-query" class="filters">${input('q','姓名 / 账号',params.q??'')}${select('role','业务角色',[{code:'all',label:'全部'},{code:'unassigned',label:'未分配'},...roles],params.role??'all',{empty:null})}<button class="primary">查询</button></form>${error&&!selected?errorPanel(error):''}${table(['姓名','账号','业务角色','备注','操作'],list.items.map(p=>rows([h(p.name??'未填写'),h(p.username),h(ROLE_LABELS[p.businessRole]??(p.businessRole==null?'未分配':'待核实')),h(p.remark??'—'),`<button data-account-edit="${h(p.id)}">编辑账号</button>`])))+pager(list.page,list.total,'#accounts',params,list.pageSize)}`)}${selected?editHtml():''}`}
+ function dirty(){
+  if(creating&&draft)return Boolean((draft.name??'').trim()||(draft.phone??'').trim()||draft.businessRole||(draft.remark??'').trim()||draft.accountManagementAuthorized);
+  return selected&&draft&&(String(selected.name??'')!==String(draft.name??'')||(selected.businessRole??null)!==(draft.businessRole??null)||String(selected.remark??'')!==String(draft.remark??''));
+ }
+ function createReady(){return creating&&draft&&Boolean((draft.name??'').trim())&&/^1[3-9][0-9]{9}$/.test((draft.phone??'').trim())}
+ function html(){
+  const roles=Object.entries(ROLE_LABELS).map(([code,label])=>({code,label}));
+  const createBtn='<button type="button" class="primary" data-account-action="open-create">新建账号</button>';
+  return `<div class="b-heading"><div><h1>账号管理</h1><p class="muted">管理人员资料与业务角色</p></div><div class="actions">${createBtn}</div></div>${panel('人员资料',`<p class="hint">系统授权与业务角色分别设置；新建账号后可使用对应手机号接收短信验证码登录。</p><form id="b-account-query" class="filters">${input('q','姓名 / 账号',params.q??'')}${select('role','业务角色',[{code:'all',label:'全部'},{code:'unassigned',label:'未分配'},...roles],params.role??'all',{empty:null})}<button class="primary">查询</button></form>${error&&!selected&&!creating?errorPanel(error):''}${table(['姓名','账号','业务角色','系统授权','备注','操作'],list.items.map(p=>rows([h(p.name??'未填写'),h(p.username),h(ROLE_LABELS[p.businessRole]??(p.businessRole==null?'未分配':'待核实')),p.accountManagementAuthorized?badge('管理员','blue'):badge('普通成员'),h(p.remark??'—'),`<button data-account-edit="${h(p.id)}">编辑账号</button>`])))+pager(list.page,list.total,'#accounts',params,list.pageSize)}`)}${creating?createHtml():selected?editHtml():''}`;
+ }
+ function createHtml(){
+  const roles=Object.entries(ROLE_LABELS);
+  return `<dialog id="b-account-dialog" class="design-account-drawer" aria-labelledby="b-create-title"><form id="b-account-create"><div class="section-heading"><h2 id="b-create-title">新建账号</h2><button type="button" data-account-action="cancel" aria-label="关闭新建账号">×</button></div><p class="hint">账号创建后，该手机号可直接在登录页使用短信验证码登录活动工作台。</p>${error?errorPanel(error):''}${discardPrompt?'<div class="b-note" role="alert"><p>当前填写内容尚未保存，是否放弃新建？</p><div class="actions"><button type="button" data-account-action="continue-edit">继续填写</button><button type="button" data-account-action="discard">放弃并关闭</button></div></div>':''}${input('name','姓名',draft.name??'',{maxLength:50,placeholder:'请输入成员姓名',required:true})}<label>手机号（登录账号） <span class="b-required">*</span><input name="phone" type="tel" inputmode="numeric" maxlength="11" pattern="1[3-9][0-9]{9}" value="${h(draft.phone??'')}" placeholder="请输入 11 位中国大陆手机号" required></label><fieldset class="design-role-fieldset"><legend>业务角色</legend><div class="design-role-grid">${roles.map(([code,label])=>`<label><input type="radio" name="businessRole" value="${h(code)}" ${draft.businessRole===code?'checked':''}>${h(label)}</label>`).join('')}</div><div class="actions"><button type="button" class="text" data-account-action="clear-role">清为未分配</button></div></fieldset>${textarea('remark','备注（仅账号管理员可见）',draft.remark??'',200)}<label class="design-system-grant design-grant-check"><input type="checkbox" name="accountManagementAuthorized" ${draft.accountManagementAuthorized?'checked':''}><span>授予账号管理授权（全权管理员，可管理账号、审核与排期）</span></label><p class="hint">普通成员按所选业务角色自动分配对应提报、审核或只读权限。</p><div class="actions design-drawer-actions"><button type="button" data-account-action="cancel">取消</button><button class="primary" ${saving||!createReady()?'disabled':''} ${saving?'aria-busy="true"':''}>${saving?'正在创建…':'创建账号'}</button></div></form></dialog>`;
+ }
  function editHtml(){const roles=Object.entries(ROLE_LABELS);return `<dialog id="b-account-dialog" class="design-account-drawer" aria-labelledby="b-edit-title"><form id="b-account-edit"><div class="section-heading"><h2 id="b-edit-title">编辑账号</h2><button type="button" data-account-action="cancel" aria-label="关闭账号编辑">×</button></div><p class="mono">账号ID：${h(selected.id)} · 资料修订 ${h(selected.profileVersion)}</p>${error?errorPanel(error):''}${discardPrompt?'<div class="b-note" role="alert"><p>当前修改尚未保存，是否放弃本次修改？</p><div class="actions"><button type="button" data-account-action="continue-edit">继续编辑</button><button type="button" data-account-action="discard">放弃修改并关闭</button></div></div>':''}${input('name','姓名',draft.name??'',{maxLength:50})}${input('username','账号（只读）',selected.username,{disabled:true})}<fieldset class="design-role-fieldset"><legend>业务角色</legend><div class="design-role-grid">${roles.map(([code,label])=>`<label><input type="radio" name="businessRole" value="${h(code)}" ${draft.businessRole===code?'checked':''}>${h(label)}</label>`).join('')}</div><div class="actions"><button type="button" class="text" data-account-action="clear-role">清为未分配</button></div></fieldset>${textarea('remark','备注（仅账号管理员可见）',draft.remark??'',200)}<p class="design-system-grant">账号管理授权：${badge(selected.accountManagementAuthorized?'已授权（只读）':'无（只读）')}</p><p class="hint">业务角色与账号管理授权分别设置，角色修改不会改写历史身份。</p><div class="actions design-drawer-actions">${error?.status===409?'<button type="button" data-account-action="latest">读取最新资料，保留我的输入</button>':''}<button type="button" data-account-action="cancel">取消</button><button class="primary" ${saving||!dirty()?'disabled':''} ${saving?'aria-busy="true"':''}>${saving?'正在保存…':'保存修改'}</button></div></form></dialog>`}
  function paint(){if(signal?.aborted||ctx.route()!=='accounts')return;ctx.frame(html());const dialog=document.querySelector('#b-account-dialog');if(dialog&&!dialog.open){dialog.showModal();dialog.addEventListener('cancel',e=>{e.preventDefault();cancel()},{once:true})}}
- function capture(form){if(!form)return;const values=Object.fromEntries(new FormData(form));draft={name:values.name||null,businessRole:values.businessRole||null,remark:values.remark||null}}
- function cancel(force=false){if(saving)return;capture(document.querySelector('#b-account-edit'));if(!force&&dirty()){discardPrompt=true;paint();return}discardPrompt=false;const id=selected?.id;selected=null;draft=null;error=null;paint();document.querySelector(`[data-account-edit="${CSS.escape(id??'')}"]`)?.focus()}
+ function activeForm(){return document.querySelector('#b-account-create')??document.querySelector('#b-account-edit')}
+ function capture(form){
+  if(!form)return;
+  const fd=new FormData(form);
+  if(form.id==='b-account-create'){
+   draft={
+    name:String(fd.get('name')??''),
+    phone:String(fd.get('phone')??'').replace(/\D+/g,'').slice(0,11),
+    businessRole:fd.get('businessRole')||null,
+    remark:String(fd.get('remark')??''),
+    accountManagementAuthorized:form.querySelector('input[name="accountManagementAuthorized"]')?.checked===true,
+   };
+   return;
+  }
+  const values=Object.fromEntries(fd);
+  draft={name:values.name||null,businessRole:values.businessRole||null,remark:values.remark||null};
+ }
+ function cancel(force=false){
+  if(saving)return;
+  capture(activeForm());
+  if(!force&&dirty()){discardPrompt=true;paint();return}
+  discardPrompt=false;
+  const wasCreating=creating,id=selected?.id;
+  creating=false;selected=null;draft=null;error=null;
+  paint();
+  if(wasCreating)document.querySelector('[data-account-action="open-create"]')?.focus();
+  else document.querySelector(`[data-account-edit="${CSS.escape(id??'')}"]`)?.focus();
+ }
  return {
-  async load(route,p,abortSignal){if(!canManage())throw Object.assign(new Error('仅具有独立账号管理授权者可查看。'),{status:403});params={q:p.q??'',role:p.role??'all'};signal=abortSignal;const query=new URLSearchParams({...params,page:p.page??1,pageSize:10});const env=await ctx.adapter.request('/users?'+query,{account:true,signal});if(abortSignal!==signal||abortSignal.aborted)return;list=env.data;selected=null;draft=null;error=null;paint()},
-  async click(target){const clickSignal=signal;const edit=target.closest('[data-account-edit]');if(edit){const env=await ctx.adapter.request('/users/'+encodeURIComponent(edit.dataset.accountEdit),{account:true,signal});if(clickSignal!==signal||clickSignal.aborted)return true;selected=env.data;draft={name:selected.name,businessRole:selected.businessRole,remark:selected.remark};error=null;paint();return true}const action=target.closest('[data-account-action]')?.dataset.accountAction;if(action==='cancel'){cancel();return true}if(action==='continue-edit'){capture(document.querySelector('#b-account-edit'));discardPrompt=false;paint();return true}if(action==='discard'){cancel(true);return true}if(action==='clear-role'){capture(document.querySelector('#b-account-edit'));draft.businessRole=null;discardPrompt=false;paint();return true}if(action==='latest'){capture(document.querySelector('#b-account-edit'));const env=await ctx.adapter.request('/users/'+encodeURIComponent(selected.id),{account:true,signal});if(clickSignal!==signal||clickSignal.aborted)return true;selected=env.data;error=null;paint();return true}return false},
-  async submit(form){if(form.id==='b-account-query'){const values=Object.fromEntries(new FormData(form));ctx.navigate('#accounts?'+new URLSearchParams({...values,page:1}));return true}if(form.id!=='b-account-edit')return false;if(saving)return true;capture(form);if(!dirty())return true;if(!Number.isInteger(selected.profileVersion))throw new Error('服务未返回资料版本，不能安全保存。');const body={expectedVersion:selected.profileVersion,name:draft.name,phone:selected.phone??null,businessRole:draft.businessRole,remark:draft.remark};const operationSignal=signal;saving=true;paint();
+  async load(route,p,abortSignal){if(!canManage())throw Object.assign(new Error('仅具有独立账号管理授权者可查看。'),{status:403});params={q:p.q??'',role:p.role??'all'};signal=abortSignal;const query=new URLSearchParams({...params,page:p.page??1,pageSize:10});const env=await ctx.adapter.request('/users?'+query,{account:true,signal});if(abortSignal!==signal||abortSignal.aborted)return;list=env.data;creating=false;selected=null;draft=null;error=null;paint()},
+  async click(target){
+   const clickSignal=signal;
+   const edit=target.closest('[data-account-edit]');
+   if(edit){const env=await ctx.adapter.request('/users/'+encodeURIComponent(edit.dataset.accountEdit),{account:true,signal});if(clickSignal!==signal||clickSignal.aborted)return true;creating=false;selected=env.data;draft={name:selected.name,businessRole:selected.businessRole,remark:selected.remark};error=null;discardPrompt=false;paint();return true}
+   const action=target.closest('[data-account-action]')?.dataset.accountAction;
+   if(action==='open-create'){creating=true;selected=null;draft={name:'',phone:'',businessRole:null,remark:'',accountManagementAuthorized:false};error=null;discardPrompt=false;paint();document.querySelector('#b-account-create input[name="name"]')?.focus();return true}
+   if(action==='cancel'){cancel();return true}
+   if(action==='continue-edit'){capture(activeForm());discardPrompt=false;paint();return true}
+   if(action==='discard'){cancel(true);return true}
+   if(action==='clear-role'){capture(activeForm());draft.businessRole=null;discardPrompt=false;paint();return true}
+   if(action==='latest'){capture(document.querySelector('#b-account-edit'));const env=await ctx.adapter.request('/users/'+encodeURIComponent(selected.id),{account:true,signal});if(clickSignal!==signal||clickSignal.aborted)return true;selected=env.data;error=null;paint();return true}
+   return false;
+  },
+  async submit(form){
+   if(form.id==='b-account-query'){const values=Object.fromEntries(new FormData(form));ctx.navigate('#accounts?'+new URLSearchParams({...values,page:1}));return true}
+   if(form.id==='b-account-create'){
+    if(saving)return true;
+    capture(form);
+    if(!createReady())return true;
+    const body={name:draft.name.trim(),phone:draft.phone.trim(),businessRole:draft.businessRole,remark:draft.remark.trim()||null,accountManagementAuthorized:draft.accountManagementAuthorized===true};
+    const operationSignal=signal;saving=true;error=null;paint();
+    try{
+     await ctx.adapter.request('/users',{account:true,method:'POST',body,signal:operationSignal});
+     if(operationSignal!==signal||operationSignal.aborted)return true;
+     saving=false;creating=false;draft=null;error=null;discardPrompt=false;
+     ctx.notice('账号已创建，该手机号现在可以直接使用短信验证码登录。');
+     await ctx.rerender();
+    }catch(e){
+     if(ctx.authError?.(e))return true;
+     if(operationSignal!==signal||operationSignal.aborted)return true;
+     error=e;
+    }finally{
+     saving=false;
+     if(operationSignal===signal&&!operationSignal.aborted)paint();
+    }
+    return true;
+   }
+   if(form.id!=='b-account-edit')return false;
+   if(saving)return true;
+   capture(form);if(!dirty())return true;
+   if(!Number.isInteger(selected.profileVersion))throw new Error('服务未返回资料版本，不能安全保存。');
+   const body={expectedVersion:selected.profileVersion,name:draft.name,phone:selected.phone??null,businessRole:draft.businessRole,remark:draft.remark};
+   const operationSignal=signal;saving=true;paint();
    try{await ctx.commands.run('profile:'+selected.id+':'+selected.profileVersion,'accounts.profile.update','PUT','/users/'+encodeURIComponent(selected.id)+'/profile',body,{signal:operationSignal});if(operationSignal!==signal||operationSignal.aborted)return true;saving=false;selected=null;draft=null;error=null;ctx.notice('账号资料已由服务保存，正在读回。');await ctx.rerender()}
    catch(e){if(ctx.authError?.(e))return true;if(operationSignal!==signal||operationSignal.aborted)return true;error=e;paint()}finally{saving=false;if(operationSignal===signal&&!operationSignal.aborted)paint()}return true;
   },
-  input(target){if(target.closest('#b-account-edit')){capture(document.querySelector('#b-account-edit'));const button=document.querySelector('#b-account-edit button.primary');if(button)button.disabled=saving||!dirty()}},
-  change(target){if(target.closest('#b-account-edit')){capture(document.querySelector('#b-account-edit'));const button=document.querySelector('#b-account-edit button.primary');if(button)button.disabled=saving||!dirty();return true}return false},
-  pause(){capture(document.querySelector('#b-account-edit'))},
-  clear(){discardPrompt=false;saving=false;selected=null;draft=null;error=null;list={items:[],total:null,page:1,pageSize:10}}
- }
+  input(target){
+   const form=target.closest('#b-account-create')??target.closest('#b-account-edit');
+   if(!form)return;
+   if(form.id==='b-account-create'&&target.name==='phone'){const digits=target.value.replace(/\D+/g,'').slice(0,11);if(target.value!==digits)target.value=digits}
+   capture(form);
+   const button=form.querySelector('button.primary');
+   if(button)button.disabled=saving||(form.id==='b-account-create'?!createReady():!dirty());
+  },
+  change(target){
+   const form=target.closest('#b-account-create')??target.closest('#b-account-edit');
+   if(!form)return false;
+   capture(form);
+   const button=form.querySelector('button.primary');
+   if(button)button.disabled=saving||(form.id==='b-account-create'?!createReady():!dirty());
+   return true;
+  },
+  pause(){capture(activeForm())},
+  clear(){discardPrompt=false;saving=false;creating=false;selected=null;draft=null;error=null;list={items:[],total:null,page:1,pageSize:10}}
+ };
 }
