@@ -180,8 +180,24 @@ async function listPayload(file,upload){
  if(file.size===0||!Number.isInteger(upload.maxDecodedBytes)||file.size>upload.maxDecodedBytes)throw new Error('请选择非空且符合大小上限的商品清单。');
  return attachmentPayload(file,MEDIA[ext]);
 }
+const bufferedFiles=new WeakMap();
+function readableFileError(error){
+ if(error?.name==='NotReadableError'||/could not be read/i.test(error?.message??'')){
+  return new Error('浏览器无法读取该本地文件（可能被 Excel/WPS 占用、尚未从微信/网盘下载到本地，或选择后文件已变动）。请先将文件保存到桌面或下载目录，关闭占用程序后重新选择。');
+ }
+ return error;
+}
+function snapshotFile(file){
+ if(!file)return null;
+ const existing=bufferedFiles.get(file);
+ if(existing)return existing;
+ const promise=file.arrayBuffer().then(buf=>new Uint8Array(buf),error=>{throw readableFileError(error)});
+ promise.catch(()=>{});
+ bufferedFiles.set(file,promise);
+ return promise;
+}
 async function attachmentPayload(file,mediaType){
- const bytes=new Uint8Array(await file.arrayBuffer());
+ const bytes=await snapshotFile(file);
  let binary='';
  for(let i=0;i<bytes.length;i+=32768)binary+=String.fromCharCode(...bytes.subarray(i,i+32768));
  return {filename:file.name,mediaType,contentBase64:btoa(binary),sha256:shaHex(await crypto.subtle.digest('SHA-256',bytes))};
@@ -438,6 +454,7 @@ export function createPlatformMaterialsController(ctx){
   change(target){
    if(target.id==='pm-check-screenshot'){
     checkScreenshot=target.files[0]??null;
+    if(checkScreenshot)snapshotFile(checkScreenshot);
     const selection=document.querySelector('#pm-check-screenshot-selection');
     selection.hidden=!checkScreenshot;
     document.querySelector('#pm-check-screenshot-name').textContent=checkScreenshot?.name??'';
@@ -451,6 +468,7 @@ export function createPlatformMaterialsController(ctx){
    }
    if(target.id==='pm-file'){
     draft.file=target.files[0]??null;
+    if(draft.file)snapshotFile(draft.file);
     document.querySelector('#pm-file-note').textContent=draft.file?'已选 '+draft.file.name+' · 支持 CSV 或 XLSX，清单按原件留存。':'支持 CSV 或 XLSX，清单按原件留存。';
     return;
    }

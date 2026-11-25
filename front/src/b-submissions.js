@@ -2386,7 +2386,15 @@ export function createSubmissionsController(ctx){
    if(added.some(f=>f.size>5*1024*1024))throw new Error('单件附件不能超过5MiB。');
    if([...queue.map(f=>f.file),...added].reduce((n,f)=>n+f.size,0)>10*1024*1024)throw new Error('附件合计不能超过10MiB。');
    for(const file of added){
-    const item={file};
+    const bytesPromise=snapshotFile(file);
+    const item={file,bytes:null,bytesPromise};
+    bytesPromise.then(bytes=>{item.bytes=bytes},err=>{
+     if(!queue.includes(item))return;
+     item.error=err;
+     item.previewMessage=null;
+     item.previewBlocked=false;
+     if(alive())paint();
+    });
     if(!groupFiles&&agentFirst()&&/\.xlsx$/i.test(file.name)){
      item.previewMessage='服务端正在预解析 Excel…';
      pending.push(item);
@@ -2400,15 +2408,34 @@ export function createSubmissionsController(ctx){
   for(const item of pending)attachmentPreviewQueue=attachmentPreviewQueue.then(()=>previewExcel(item,queue,operationSignal));
  }
  let attachmentPreviewQueue=Promise.resolve();
+ function readableFileError(error){
+  if(error?.name==='NotReadableError'||/could not be read/i.test(error?.message??'')){
+   return new Error('浏览器无法读取该本地文件（可能被 Excel/WPS 占用、尚未从微信/网盘下载到本地，或选择后文件已变动）。请先将文件保存到桌面或下载目录，关闭占用程序后重新选择。');
+  }
+  return error;
+ }
+ function snapshotFile(file){
+  const promise=file.arrayBuffer().then(buf=>new Uint8Array(buf),error=>{throw readableFileError(error)});
+  promise.catch(()=>{});
+  return promise;
+ }
  async function previewExcel(item,queue,operationSignal){
   if(operationSignal?.aborted||!queue.includes(item))return;
   try{
-   const body={...await materialBody(item.file),checkOnly:true};
+   const body={...await materialBody(item),checkOnly:true};
    const {data}=await ctx.adapter.request('/materials',{method:'POST',body,signal:operationSignal});
    item.previewMessage=data.ready?'服务端预解析通过。':data.message+' 可精简内容或分批提交所需明细。';
    item.previewBlocked=!data.ready;
   }catch(e){
    if(operationSignal?.aborted)return;
+   const readable=readableFileError(e);
+   if(readable!==e||item.error){
+    item.error=item.error??readable;
+    item.previewMessage=null;
+    item.previewBlocked=false;
+    if(operationSignal===signal&&queue.includes(item)&&alive())paint();
+    return;
+   }
    item.previewMessage=e.status===422?e.message:'服务端预检查暂不可用，仍可保存原件。';
    item.previewBlocked=e.status===422;
   }
@@ -2419,8 +2446,18 @@ export function createSubmissionsController(ctx){
    status.className=item.previewBlocked?'b-file-error':'hint';
   }
  }
- async function materialBody(file){
-  const bytes=new Uint8Array(await file.arrayBuffer());
+ async function materialBody(target){
+  const item=target&&typeof target==='object'&&'file' in target?target:null;
+  const file=item?item.file:target;
+  let bytes=item?.bytes??null;
+  if(!bytes){
+   try{
+    bytes=await (item?.bytesPromise??snapshotFile(file));
+   }catch(e){
+    bytes=await snapshotFile(file);
+   }
+   if(item)item.bytes=bytes;
+  }
   const sha256=Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256',bytes)),x=>x.toString(16).padStart(2,'0')).join('');
   let binary='';
   for(let i=0;i<bytes.length;i+=32768)binary+=String.fromCharCode(...bytes.subarray(i,i+32768));
@@ -2434,11 +2471,11 @@ export function createSubmissionsController(ctx){
   if(f.materialId)return f.materialId;
   f.uploading=true;f.error=null;paint();
   try{
-   const body=await materialBody(f.file);
+   const body=await materialBody(f);
    const env=await ctx.commands.run('upload:'+body.sha256+':'+f.file.name,'materials.upload','POST','/materials',body,{signal});
    f.materialId=env.data.materialId;
    return f.materialId;
-  }catch(e){f.error=e;throw e}
+  }catch(e){const err=readableFileError(e);f.error=err;throw err}
   finally{f.uploading=false}
  }
  async function sendIntake(body,{supplement=false}={},operationSignal){
