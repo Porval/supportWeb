@@ -455,6 +455,7 @@ export function createPlatformMaterialsController(ctx){
    if(target.id==='pm-check-screenshot'){
     checkScreenshot=target.files[0]??null;
     if(checkScreenshot)snapshotFile(checkScreenshot);
+    target.value='';
     const selection=document.querySelector('#pm-check-screenshot-selection');
     selection.hidden=!checkScreenshot;
     document.querySelector('#pm-check-screenshot-name').textContent=checkScreenshot?.name??'';
@@ -469,6 +470,7 @@ export function createPlatformMaterialsController(ctx){
    if(target.id==='pm-file'){
     draft.file=target.files[0]??null;
     if(draft.file)snapshotFile(draft.file);
+    target.value='';
     document.querySelector('#pm-file-note').textContent=draft.file?'已选 '+draft.file.name+' · 支持 CSV 或 XLSX，清单按原件留存。':'支持 CSV 或 XLSX，清单按原件留存。';
     return;
    }

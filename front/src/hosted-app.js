@@ -514,7 +514,7 @@ async function logout(){if(logoutBusy||recoveryBusy)return;
  const wasAnonymous=session?.anonymous===true;
  usernameCache='';
  logoutBusy=true;++loginAttempt;loginController?.abort();clearPassword();clearProtected();loginPage(wasAnonymous?'正在切换至登录页…':'正在退出登录，受保护资料已隐藏。');busyLogin(true);
- try{await adapter.logout();adapter.clear();loginPage(wasAnonymous?'已退出匿名查看，请使用管理员手机号登录。':'已退出登录。');notify(wasAnonymous?'已退出匿名查看模式。':'当前会话已由服务撤销。')}
+ try{await adapter.logout();adapter.clear();loginPage(wasAnonymous?'已退出匿名查看，请使用已开通账号手机号登录。':'已退出登录。');notify(wasAnonymous?'已退出匿名查看模式。':'当前会话已由服务撤销。')}
  catch(error){try{const value=await adapter.session();if(!value.authenticated){adapter.clear();loginPage('已确认当前没有有效会话。');return}}catch{}loginPage('尚不能确认退出结果，受保护资料已隐藏，请重试退出。',{pendingLogout:true,retry:true})}
  finally{logoutBusy=false;busyLogin(false)}
 }

@@ -18,7 +18,7 @@ from workbench_settings import ADMIN_PHONE, PUBLIC_HOSTS, PUBLIC_ORIGIN
 ROOT = Path(__file__).resolve().parent
 API = '/api/activity/v1'
 ORIGIN = PUBLIC_ORIGIN
-BUILD = 'jt024-hosted-20261124.5'
+BUILD = 'jt024-hosted-20261126.1'
 PUBLIC = ROOT / 'front'
 sys.path.insert(0, str(ROOT / 'runtime'))
 

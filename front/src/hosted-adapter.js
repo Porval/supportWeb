@@ -6,7 +6,8 @@ export function createHostedAdapter(transport=(...args)=>fetch(...args)){
  let sessionValue=null;
  async function request(path,{account=false,signal,method='GET',body,commandKey,binary=false}={}){
   const controller=new AbortController();let timedOut=false;const cancel=()=>controller.abort();signal?.addEventListener('abort',cancel,{once:true});if(signal?.aborted)controller.abort();
-  const timer=setTimeout(()=>{timedOut=true;controller.abort()},account&&['/login','/logout'].includes(path)?8000:15000);
+  const isSlow=!account&&(path==='/materials'||path.includes('/sales-comparison')||path.startsWith('/products/sales-history')||path.includes('/shenjia-preview')||path==='/submissions/shenjia-batch'||/\/platforms\/[^/]+\/materials(?:\?|$)/.test(path)||/\/verify(?:\?|$)/.test(path));
+  const timer=setTimeout(()=>{timedOut=true;controller.abort()},account&&['/login','/logout'].includes(path)?8000:isSlow?65000:15000);
   try{
    const response=await transport((account?accountPrefix:operationsPrefix)+path,{method,credentials:'same-origin',cache:'no-store',signal:controller.signal,headers:{Accept:binary?'application/octet-stream':'application/json',...(commandKey?{'Idempotency-Key':commandKey}:{}),...(body!==undefined?{'Content-Type':'application/json','X-CSRF-Token':sessionValue?.csrfToken??''}:{})},...(body!==undefined?{body:JSON.stringify(body)}:{})});
    if(binary&&response.ok){
